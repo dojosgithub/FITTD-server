@@ -6,22 +6,22 @@ import cors from 'cors'
 import routes from './routes'
 //enable errorHandler when it is implemented
 // import { errorHandler, decodeRoleTokenMiddleware } from './middlewares'
-import { decodeRoleTokenMiddleware } from './middlewares'
+// import { decodeRoleTokenMiddleware } from './middlewares'
 import { connectMongoDB } from './config/dbConnection'
 import { corsConfig } from './config/cors'
-import passport from 'passport'
-import session from 'express-session'
+// import passport from 'passport'
+// import session from 'express-session'
 // import passport.js
 import './utils/passport.js'
 // import sse from './config/sse'
-import { CONTROLLER_PAYMENT } from './controllers'
+// import { CONTROLLER_PAYMENT } from './controllers'
 import fs from 'fs'
 // import secretsManager from './config/secretsManager'
-import dotenv from 'dotenv'
+// import dotenv from 'dotenv'
 import configSwagger from './config/swagger'
 
 import { createServer } from 'node:http'
-import { Server } from 'socket.io'
+// import { Server } from 'socket.io'
 import { init } from './socket'
 import { setupSocketEventHandlers } from './socketEvents'
 import { task } from './utils/cron'
@@ -53,17 +53,17 @@ app.use(cors(corsConfig))
 //   CONTROLLER_PAYMENT.stripeWebhookSecure
 // )
 app.use(express.json({ limit: '50mb', extended: true }))
-app.use(decodeRoleTokenMiddleware)
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET, // session secret
-    resave: false,
-    saveUninitialized: false,
-  })
-)
+// app.use(decodeRoleTokenMiddleware)
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET, // session secret
+//     resave: false,
+//     saveUninitialized: false,
+//   })
+// )
 // initialize passport and session
-app.use(passport.initialize())
-app.use(passport.session())
+// app.use(passport.initialize())
+// app.use(passport.session())
 // app.get(
 //   '/api/stream',
 //   (req, res, next) => {
