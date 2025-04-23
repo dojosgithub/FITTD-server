@@ -14,77 +14,8 @@ export const userSchema = new Schema(
       required: true,
       unique: true,
     },
-    gender: String,
-    file: Object,
-    age: String,
-    weight: {
-      value: String,
-      unit: {
-        type: String,
-        enum: ['imperial', 'metric'],
-      },
-    },
-    height: {
-      value: String,
-      unit: {
-        type: String,
-        enum: ['imperial', 'metric'],
-      },
-    },
-    followers: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
-    following: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
+
     password: { type: String, select: false },
-    location: String,
-    username: String,
-    accountType: String,
-    about: String,
-    role: Object,
-    userTypes: Array,
-    refreshTokens: [String],
-
-    challenges: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Challenge',
-      },
-    ],
-
-    badges: [
-      {
-        badgeId: {
-          type: Schema.Types.ObjectId,
-          ref: 'Badge',
-        },
-        name: String,
-        quantity: Number,
-        _type: String,
-        image: String,
-      },
-    ],
-
-    lastActive: {
-      type: Date,
-    },
-
-    points: {
-      type: Number,
-      default: 0,
-    },
-
-    fcmToken: String,
-    totalCaloriesBurnt: {
-      type: Number,
-      default: 0,
-    },
-    totalTimeInSeconds: {
-      type: Number,
-      default: 0,
-    },
-
-    level: {
-      type: String,
-      default: 'Beginner',
-    },
   },
   { versionKey: false, timestamps: true }
 )
