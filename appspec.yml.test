@@ -1,0 +1,27 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ec2-user/server
+    # destination: /var/www/html/grcserver
+hooks:
+  ApplicationStop:
+    - location: scripts/application_stop.sh
+      timeout: 300
+      runas: root
+      # runas: ec2-user
+  # BeforeInstall:
+  #   - location: scripts/before_install.sh
+  #     timeout: 300
+  #     runas: root
+  # runas: ec2-user
+  # Runs after code is dropped into ec2
+  AfterInstall:
+    - location: scripts/after_install.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: scripts/application_start.sh
+      timeout: 300
+      runas: root
+      # runas: ec2-user

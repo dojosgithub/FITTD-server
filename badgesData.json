@@ -1,0 +1,93 @@
+[
+  {
+    "key": "ZVB",
+    "name": "Zeal Veteran Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029584/zeal-dev/ZealVeteran_eered2.png",
+    "description": "Awarded for joining or signing up to the zeal version 01.",
+    "type": "Activity"
+  },
+  {
+    "key": "SMB",
+    "name": "Streak Master Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029646/zeal-dev/StreakMaster_evpuxn.png",
+    "description": "Awarded for maintaining daily activity on the app. The number on the badge represents the consecutive days. If a user misses a day, the streak will reset to 0.",
+    "type": "Activity"
+  },
+  {
+    "key": "CCB",
+    "name": "Challenge Conqueror Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029694/zeal-dev/Conqueror_m5tdfa.png",
+    "description": "Awarded for consistently completing the challenge for a week. If users miss any day, the count will reset to 0.",
+    "type": "Activity"
+  },
+  {
+    "key": "EDB",
+    "name": "Engagement Dynamo Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029734/zeal-dev/Dynamo_imfzex.png",
+    "description": "Awarded for joining at least 1 community, posting 5 comments, and 1 post.",
+    "type": "Activity"
+  },
+  {
+    "key": "FB",
+    "name": "Follower Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029818/zeal-dev/Followers_cruzr9.png",
+    "description": "Awarded for hitting 500 followers.",
+    "type": "Activity"
+  },
+  {
+    "key": "ACB",
+    "name": "Active Community Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029797/zeal-dev/ActiveCommunity_vqdxex.png",
+    "description": "Awarded to members of the community who are active in the group on alternative days at least for a month.",
+    "type": "Community"
+  },
+  {
+    "key": "LB",
+    "name": "Longevity Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029831/zeal-dev/Longivety_cwdex4.png",
+    "description": "Awarded based on the duration of activity of the community.",
+    "type": "Community"
+  },
+  {
+    "key": "GCB",
+    "name": "Growth Champion Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725029825/zeal-dev/GrowthChamp_bmgl9l.png",
+    "description": "Awarded to the community if 10 or more members join within a week.",
+    "type": "Community"
+  },
+  {
+    "key": "HLB",
+    "name": "Heavy Lifter Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725026660/zeal-dev/HeavyLifter_oygilj.png",
+    "description": "Earned by completing a weight lifting challenge.",
+    "type": "Challenge"
+  },
+  {
+    "key": "SDB",
+    "name": "Speed Demon Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725026626/zeal-dev/SpeedDemon_kbgd4k.png",
+    "description": "Earned by completing speed challenges.",
+    "type": "Challenge"
+  },
+  {
+    "key": "EWB",
+    "name": "Endurance Warrior Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725026718/zeal-dev/EnduranceWarrior_ucrlpn.png",
+    "description": "Earned by completing endurance challenges.",
+    "type": "Challenge"
+  },
+  {
+    "key": "FGB",
+    "name": "Flexibility Guru Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725026693/zeal-dev/FlexibilityGuru_lfbcgs.png",
+    "description": "Earned by completing flexibility challenges, mastering a yoga pose or improving flexibility metrics.",
+    "type": "Challenge"
+  },
+  {
+    "key": "ARB",
+    "name": "All-Rounder Badge",
+    "image": "https://res.cloudinary.com/dojo-dev/image/upload/v1725026739/zeal-dev/AllRounder_wqxl2h.png",
+    "description": "Earned by completing a diverse range of challenges across different fitness categories.",
+    "type": "Challenge"
+  }
+]

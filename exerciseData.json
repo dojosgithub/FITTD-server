@@ -1,0 +1,1321 @@
+[
+  {
+    "name": "Push-Ups",
+    "description": "A basic bodyweight exercise that works the chest, shoulders, and triceps.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "push-ups.jpg",
+      "video": "push-ups.mp4"
+    }
+  },
+  {
+    "name": "Bench Press",
+    "description": "A compound exercise that primarily targets the chest, triceps, and shoulders.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "60 seconds",
+    "files": {
+      "image": "bench-press.jpg",
+      "video": "bench-press.mp4"
+    }
+  },
+  {
+    "name": "Incline Bench Press",
+    "description": "An upper chest exercise performed on an inclined bench to target the upper portion of the pectorals.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "60 seconds",
+    "files": {
+      "image": "incline-bench-press.jpg",
+      "video": "incline-bench-press.mp4"
+    }
+  },
+  {
+    "name": "Decline Bench Press",
+    "description": "Targets the lower chest by performing the bench press on a decline bench.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "60 seconds",
+    "files": {
+      "image": "decline-bench-press.jpg",
+      "video": "decline-bench-press.mp4"
+    }
+  },
+  {
+    "name": "Chest Flyes",
+    "description": "An isolation exercise that stretches and contracts the chest muscles.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "45 seconds",
+    "files": {
+      "image": "chest-flyes.jpg",
+      "video": "chest-flyes.mp4"
+    }
+  },
+  {
+    "name": "Dumbbell Pullover",
+    "description": "A versatile exercise that works the chest and back muscles.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "45 seconds",
+    "files": {
+      "image": "dumbbell-pullover.jpg",
+      "video": "dumbbell-pullover.mp4"
+    }
+  },
+  {
+    "name": "Cable Crossovers",
+    "description": "An isolation exercise that targets the inner chest muscles.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "cable-crossovers.jpg",
+      "video": "cable-crossovers.mp4"
+    }
+  },
+  {
+    "name": "Pec Deck Machine",
+    "description": "An isolation machine exercise focusing on the chest muscles.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "pec-deck-machine.jpg",
+      "video": "pec-deck-machine.mp4"
+    }
+  },
+  {
+    "name": "Incline Dumbbell Flyes",
+    "description": "Targets the upper chest muscles by performing flyes on an incline bench.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "45 seconds",
+    "files": {
+      "image": "incline-dumbbell-flyes.jpg",
+      "video": "incline-dumbbell-flyes.mp4"
+    }
+  },
+  {
+    "name": "Decline Push-Ups",
+    "description": "A variation of push-ups that targets the lower chest muscles.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "decline-push-ups.jpg",
+      "video": "decline-push-ups.mp4"
+    }
+  },
+  {
+    "name": "Wide-Grip Push-Ups",
+    "description": "Targets the outer chest muscles with a wide grip during push-ups.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "wide-grip-push-ups.jpg",
+      "video": "wide-grip-push-ups.mp4"
+    }
+  },
+  {
+    "name": "Svend Press",
+    "description": "An isolation chest exercise using a plate to target the inner chest muscles.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "svend-press.jpg",
+      "video": "svend-press.mp4"
+    }
+  },
+  {
+    "name": "Resistance Band Chest Press",
+    "description": "A resistance band exercise that mimics the chest press motion.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "resistance-band-chest-press.jpg",
+      "video": "resistance-band-chest-press.mp4"
+    }
+  },
+  {
+    "name": "Single-Arm Chest Fly",
+    "description": "An isolation exercise that targets the chest with unilateral movement.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "45 seconds",
+    "files": {
+      "image": "single-arm-chest-fly.jpg",
+      "video": "single-arm-chest-fly.mp4"
+    }
+  },
+  {
+    "name": "Medicine Ball Chest Pass",
+    "description": "A plyometric exercise that enhances explosive chest strength.",
+    "targetMuscle": "Chest",
+    "category": "Chest",
+    "rest": "30 seconds",
+    "files": {
+      "image": "medicine-ball-chest-pass.jpg",
+      "video": "medicine-ball-chest-pass.mp4"
+    }
+  },
+  {
+    "name": "Bicep Curls",
+    "description": "A basic exercise that isolates the biceps by curling the weight up towards the shoulder.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "bicep-curls.jpg",
+      "video": "bicep-curls.mp4"
+    }
+  },
+  {
+    "name": "Hammer Curls",
+    "description": "A variation of curls that targets the brachialis and biceps muscles using a neutral grip.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "hammer-curls.jpg",
+      "video": "hammer-curls.mp4"
+    }
+  },
+  {
+    "name": "Concentration Curls",
+    "description": "An isolation exercise that focuses on the peak of the bicep muscle.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "concentration-curls.jpg",
+      "video": "concentration-curls.mp4"
+    }
+  },
+  {
+    "name": "Cable Curls",
+    "description": "A cable machine exercise that provides constant tension on the biceps throughout the movement.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "cable-curls.jpg",
+      "video": "cable-curls.mp4"
+    }
+  },
+  {
+    "name": "Preacher Curls",
+    "description": "Performed on a preacher bench, this exercise isolates the lower part of the biceps.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "preacher-curls.jpg",
+      "video": "preacher-curls.mp4"
+    }
+  },
+  {
+    "name": "EZ-Bar Curls",
+    "description": "A variation of the curl using an EZ-bar to reduce strain on the wrists while targeting the biceps.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "ez-bar-curls.jpg",
+      "video": "ez-bar-curls.mp4"
+    }
+  },
+  {
+    "name": "Incline Dumbbell Curls",
+    "description": "Performed on an incline bench, this exercise stretches the biceps for a more intense contraction.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "incline-dumbbell-curls.jpg",
+      "video": "incline-dumbbell-curls.mp4"
+    }
+  },
+  {
+    "name": "Reverse Curls",
+    "description": "A variation of the curl that targets the brachioradialis and biceps with a pronated grip.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "reverse-curls.jpg",
+      "video": "reverse-curls.mp4"
+    }
+  },
+  {
+    "name": "Spider Curls",
+    "description": "An exercise performed on an incline bench to target the biceps in a stretched position.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "spider-curls.jpg",
+      "video": "spider-curls.mp4"
+    }
+  },
+  {
+    "name": "Zottman Curls",
+    "description": "A compound movement that targets both the biceps and forearms by rotating the wrists during the curl.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "zottman-curls.jpg",
+      "video": "zottman-curls.mp4"
+    }
+  },
+  {
+    "name": "Overhead Cable Curls",
+    "description": "Performed using a cable machine, this exercise targets the biceps with the arms positioned overhead.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "overhead-cable-curls.jpg",
+      "video": "overhead-cable-curls.mp4"
+    }
+  },
+  {
+    "name": "Chin-Ups",
+    "description": "A bodyweight exercise that targets the biceps and back muscles.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "60 seconds",
+    "files": {
+      "image": "chin-ups.jpg",
+      "video": "chin-ups.mp4"
+    }
+  },
+  {
+    "name": "Barbell Curls",
+    "description": "A classic exercise that uses a barbell to isolate and build the biceps.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "barbell-curls.jpg",
+      "video": "barbell-curls.mp4"
+    }
+  },
+  {
+    "name": "Band Curls",
+    "description": "A resistance band exercise that mimics the bicep curl motion.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "band-curls.jpg",
+      "video": "band-curls.mp4"
+    }
+  },
+  {
+    "name": "Cross-Body Hammer Curls",
+    "description": "A variation of hammer curls that targets the brachialis and biceps by curling the weight across the body.",
+    "targetMuscle": "Biceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "cross-body-hammer-curls.jpg",
+      "video": "cross-body-hammer-curls.mp4"
+    }
+  },
+  {
+    "name": "Tricep Dips",
+    "description": "A bodyweight exercise that targets the triceps by dipping down and pushing up using parallel bars or a bench.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "tricep-dips.jpg",
+      "video": "tricep-dips.mp4"
+    }
+  },
+  {
+    "name": "Tricep Pushdowns",
+    "description": "An exercise performed using a cable machine to push down a bar or rope, targeting the triceps.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "tricep-pushdowns.jpg",
+      "video": "tricep-pushdowns.mp4"
+    }
+  },
+  {
+    "name": "Skull Crushers",
+    "description": "An isolation exercise performed with an EZ-bar or dumbbells to target the triceps by lowering the weight towards the forehead.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "skull-crushers.jpg",
+      "video": "skull-crushers.mp4"
+    }
+  },
+  {
+    "name": "Overhead Tricep Extension",
+    "description": "A tricep exercise performed by extending a dumbbell or bar overhead.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "overhead-tricep-extension.jpg",
+      "video": "overhead-tricep-extension.mp4"
+    }
+  },
+  {
+    "name": "Close-Grip Bench Press",
+    "description": "A variation of the bench press that targets the triceps by using a narrow grip on the barbell.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "60 seconds",
+    "files": {
+      "image": "close-grip-bench-press.jpg",
+      "video": "close-grip-bench-press.mp4"
+    }
+  },
+  {
+    "name": "Diamond Push-Ups",
+    "description": "A push-up variation that targets the triceps by placing the hands close together in a diamond shape.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "diamond-push-ups.jpg",
+      "video": "diamond-push-ups.mp4"
+    }
+  },
+  {
+    "name": "Tricep Kickbacks",
+    "description": "An isolation exercise where the triceps are targeted by extending the arm backwards while holding a dumbbell.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "tricep-kickbacks.jpg",
+      "video": "tricep-kickbacks.mp4"
+    }
+  },
+  {
+    "name": "Reverse Grip Tricep Pushdowns",
+    "description": "A variation of the tricep pushdown using a reverse grip to target the triceps.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "reverse-grip-tricep-pushdowns.jpg",
+      "video": "reverse-grip-tricep-pushdowns.mp4"
+    }
+  },
+  {
+    "name": "Rope Tricep Extensions",
+    "description": "A cable machine exercise that targets the triceps by extending the arms downwards using a rope attachment.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "rope-tricep-extensions.jpg",
+      "video": "rope-tricep-extensions.mp4"
+    }
+  },
+  {
+    "name": "Tricep Bench Press",
+    "description": "A bench press variation focusing on triceps by reducing the range of motion.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "60 seconds",
+    "files": {
+      "image": "tricep-bench-press.jpg",
+      "video": "tricep-bench-press.mp4"
+    }
+  },
+  {
+    "name": "Single-Arm Tricep Extensions",
+    "description": "An isolation exercise where the triceps are targeted by extending one arm at a time.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "single-arm-tricep-extensions.jpg",
+      "video": "single-arm-tricep-extensions.mp4"
+    }
+  },
+  {
+    "name": "Tricep Push-Up",
+    "description": "A variation of the push-up that targets the triceps by keeping the elbows close to the body.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "tricep-push-up.jpg",
+      "video": "tricep-push-up.mp4"
+    }
+  },
+  {
+    "name": "Bench Dips",
+    "description": "An exercise that targets the triceps by dipping down and pushing up using a bench.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "bench-dips.jpg",
+      "video": "bench-dips.mp4"
+    }
+  },
+  {
+    "name": "Resistance Band Tricep Pushdowns",
+    "description": "An exercise that targets the triceps by pushing down a resistance band.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "30 seconds",
+    "files": {
+      "image": "resistance-band-tricep-pushdowns.jpg",
+      "video": "resistance-band-tricep-pushdowns.mp4"
+    }
+  },
+  {
+    "name": "Lying Tricep Extensions",
+    "description": "A tricep exercise performed lying down, targeting the triceps by extending the arms overhead.",
+    "targetMuscle": "Triceps",
+    "category": "Arms",
+    "rest": "45 seconds",
+    "files": {
+      "image": "lying-tricep-extensions.jpg",
+      "video": "lying-tricep-extensions.mp4"
+    }
+  },
+  {
+    "name": "Pull-Ups",
+    "description": "A bodyweight exercise that targets the back muscles by pulling the body up to a bar.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "60 seconds",
+    "files": {
+      "image": "pull-ups.jpg",
+      "video": "pull-ups.mp4"
+    }
+  },
+  {
+    "name": "Lat Pulldowns",
+    "description": "An exercise that targets the latissimus dorsi by pulling down a bar towards the chest.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "45 seconds",
+    "files": {
+      "image": "lat-pulldowns.jpg",
+      "video": "lat-pulldowns.mp4"
+    }
+  },
+  {
+    "name": "Bent Over Rows",
+    "description": "An exercise that targets the back by rowing a barbell or dumbbell while bent over at the waist.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "45 seconds",
+    "files": {
+      "image": "bent-over-rows.jpg",
+      "video": "bent-over-rows.mp4"
+    }
+  },
+  {
+    "name": "Deadlifts",
+    "description": "A compound exercise that targets the entire back by lifting a barbell from the ground.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "90 seconds",
+    "files": {
+      "image": "deadlifts.jpg",
+      "video": "deadlifts.mp4"
+    }
+  },
+  {
+    "name": "T-Bar Rows",
+    "description": "An exercise that targets the back by rowing a T-bar attachment towards the body.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "60 seconds",
+    "files": {
+      "image": "t-bar-rows.jpg",
+      "video": "t-bar-rows.mp4"
+    }
+  },
+  {
+    "name": "Single-Arm Dumbbell Rows",
+    "description": "An exercise that targets the back by rowing a dumbbell with one arm while supporting the body with the other arm.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "45 seconds",
+    "files": {
+      "image": "single-arm-dumbbell-rows.jpg",
+      "video": "single-arm-dumbbell-rows.mp4"
+    }
+  },
+  {
+    "name": "Seated Cable Rows",
+    "description": "An exercise that targets the back by rowing a cable attachment while seated.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "45 seconds",
+    "files": {
+      "image": "seated-cable-rows.jpg",
+      "video": "seated-cable-rows.mp4"
+    }
+  },
+  {
+    "name": "Hyperextensions",
+    "description": "An exercise that targets the lower back by extending the spine while lying face down on a hyperextension bench.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "30 seconds",
+    "files": {
+      "image": "hyperextensions.jpg",
+      "video": "hyperextensions.mp4"
+    }
+  },
+  {
+    "name": "Face Pulls",
+    "description": "An exercise that targets the upper back and shoulders by pulling a cable attachment towards the face.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "30 seconds",
+    "files": {
+      "image": "face-pulls.jpg",
+      "video": "face-pulls.mp4"
+    }
+  },
+  {
+    "name": "Inverted Rows",
+    "description": "A bodyweight exercise that targets the back by pulling the chest towards a bar while lying underneath it.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "60 seconds",
+    "files": {
+      "image": "inverted-rows.jpg",
+      "video": "inverted-rows.mp4"
+    }
+  },
+  {
+    "name": "Straight Arm Pulldowns",
+    "description": "An exercise that targets the lats by pulling a cable bar down with straight arms.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "45 seconds",
+    "files": {
+      "image": "straight-arm-pulldowns.jpg",
+      "video": "straight-arm-pulldowns.mp4"
+    }
+  },
+  {
+    "name": "Good Mornings",
+    "description": "An exercise that targets the lower back and hamstrings by bending at the waist while holding a barbell on the shoulders.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "60 seconds",
+    "files": {
+      "image": "good-mornings.jpg",
+      "video": "good-mornings.mp4"
+    }
+  },
+  {
+    "name": "Renegade Rows",
+    "description": "An exercise that targets the back by rowing dumbbells while in a push-up position.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "45 seconds",
+    "files": {
+      "image": "renegade-rows.jpg",
+      "video": "renegade-rows.mp4"
+    }
+  },
+  {
+    "name": "Wide Grip Pull-Ups",
+    "description": "A variation of the pull-up that targets the back by using a wide grip on the bar.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "60 seconds",
+    "files": {
+      "image": "wide-grip-pull-ups.jpg",
+      "video": "wide-grip-pull-ups.mp4"
+    }
+  },
+  {
+    "name": "Superman Exercise",
+    "description": "A bodyweight exercise that targets the lower back by raising the arms and legs while lying face down.",
+    "targetMuscle": "Back",
+    "category": "Back",
+    "rest": "30 seconds",
+    "files": {
+      "image": "superman-exercise.jpg",
+      "video": "superman-exercise.mp4"
+    }
+  },
+  {
+    "name": "Shoulder Press",
+    "description": "An exercise that targets the shoulders by pressing a barbell or dumbbells overhead.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "60 seconds",
+    "files": {
+      "image": "shoulder-press.jpg",
+      "video": "shoulder-press.mp4"
+    }
+  },
+  {
+    "name": "Lateral Raises",
+    "description": "An exercise that targets the side deltoids by lifting dumbbells out to the sides.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "30 seconds",
+    "files": {
+      "image": "lateral-raises.jpg",
+      "video": "lateral-raises.mp4"
+    }
+  },
+  {
+    "name": "Front Raises",
+    "description": "An exercise that targets the front deltoids by lifting dumbbells straight in front of the body.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "30 seconds",
+    "files": {
+      "image": "front-raises.jpg",
+      "video": "front-raises.mp4"
+    }
+  },
+  {
+    "name": "Reverse Flyes",
+    "description": "An exercise that targets the rear deltoids by flying dumbbells out to the sides while bent over.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "45 seconds",
+    "files": {
+      "image": "reverse-flyes.jpg",
+      "video": "reverse-flyes.mp4"
+    }
+  },
+  {
+    "name": "Arnold Press",
+    "description": "A variation of the shoulder press that involves rotating the palms from facing the body to facing forward.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "60 seconds",
+    "files": {
+      "image": "arnold-press.jpg",
+      "video": "arnold-press.mp4"
+    }
+  },
+  {
+    "name": "Upright Rows",
+    "description": "An exercise that targets the shoulders and traps by pulling a barbell or dumbbells up towards the chin.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "45 seconds",
+    "files": {
+      "image": "upright-rows.jpg",
+      "video": "upright-rows.mp4"
+    }
+  },
+  {
+    "name": "Dumbbell Shoulder Press",
+    "description": "An exercise that targets the shoulders by pressing dumbbells overhead while seated or standing.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "60 seconds",
+    "files": {
+      "image": "dumbbell-shoulder-press.jpg",
+      "video": "dumbbell-shoulder-press.mp4"
+    }
+  },
+  {
+    "name": "Cable Lateral Raises",
+    "description": "An exercise that targets the side deltoids by lifting a cable attachment out to the side.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "30 seconds",
+    "files": {
+      "image": "cable-lateral-raises.jpg",
+      "video": "cable-lateral-raises.mp4"
+    }
+  },
+  {
+    "name": "Seated Dumbbell Press",
+    "description": "An exercise that targets the shoulders by pressing dumbbells overhead while seated.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "60 seconds",
+    "files": {
+      "image": "seated-dumbbell-press.jpg",
+      "video": "seated-dumbbell-press.mp4"
+    }
+  },
+  {
+    "name": "Single-Arm Landmine Press",
+    "description": "An exercise that targets the shoulders by pressing a barbell attached to a landmine with one arm.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "60 seconds",
+    "files": {
+      "image": "single-arm-landmine-press.jpg",
+      "video": "single-arm-landmine-press.mp4"
+    }
+  },
+  {
+    "name": "Face Pulls",
+    "description": "An exercise that targets the upper back and shoulders by pulling a cable attachment towards the face.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "30 seconds",
+    "files": {
+      "image": "face-pulls.jpg",
+      "video": "face-pulls.mp4"
+    }
+  },
+  {
+    "name": "Push Press",
+    "description": "An exercise that targets the shoulders by using a leg drive to press a barbell overhead.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "60 seconds",
+    "files": {
+      "image": "push-press.jpg",
+      "video": "push-press.mp4"
+    }
+  },
+  {
+    "name": "Military Press",
+    "description": "An exercise that targets the shoulders by pressing a barbell overhead with a strict form.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "60 seconds",
+    "files": {
+      "image": "military-press.jpg",
+      "video": "military-press.mp4"
+    }
+  },
+  {
+    "name": "Rear Delt Flyes",
+    "description": "An exercise that targets the rear deltoids by flying dumbbells out to the sides while bent over.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "45 seconds",
+    "files": {
+      "image": "rear-delt-flyes.jpg",
+      "video": "rear-delt-flyes.mp4"
+    }
+  },
+  {
+    "name": "Front Plate Raises",
+    "description": "An exercise that targets the front deltoids by lifting a weight plate straight in front of the body.",
+    "targetMuscle": "Shoulders",
+    "category": "Shoulders",
+    "rest": "30 seconds",
+    "files": {
+      "image": "front-plate-raises.jpg",
+      "video": "front-plate-raises.mp4"
+    }
+  },
+  {
+    "name": "Squat",
+    "description": "A compound exercise that targets the entire lower body by bending the knees and lowering the body into a squat position.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "60 seconds",
+    "files": {
+      "image": "squat.jpg",
+      "video": "squat.mp4"
+    }
+  },
+  {
+    "name": "Lunges",
+    "description": "An exercise that targets the legs and glutes by stepping forward into a lunge position and lowering the body.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "lunges.jpg",
+      "video": "lunges.mp4"
+    }
+  },
+  {
+    "name": "Leg Press",
+    "description": "An exercise that targets the legs by pressing a weighted platform away from the body with the feet.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "60 seconds",
+    "files": {
+      "image": "leg-press.jpg",
+      "video": "leg-press.mp4"
+    }
+  },
+  {
+    "name": "Hamstring Curls",
+    "description": "An exercise that targets the hamstrings by curling the legs towards the glutes while lying face down on a machine.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "hamstring-curls.jpg",
+      "video": "hamstring-curls.mp4"
+    }
+  },
+  {
+    "name": "Leg Extensions",
+    "description": "An exercise that targets the quadriceps by extending the legs while seated on a machine.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "leg-extensions.jpg",
+      "video": "leg-extensions.mp4"
+    }
+  },
+  {
+    "name": "Calf Raises",
+    "description": "An exercise that targets the calves by raising the heels off the ground while standing.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "calf-raises.jpg",
+      "video": "calf-raises.mp4"
+    }
+  },
+  {
+    "name": "Romanian Deadlifts",
+    "description": "An exercise that targets the hamstrings and glutes by lowering a barbell down the front of the legs while maintaining a straight back.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "60 seconds",
+    "files": {
+      "image": "romanian-deadlifts.jpg",
+      "video": "romanian-deadlifts.mp4"
+    }
+  },
+  {
+    "name": "Bulgarian Split Squats",
+    "description": "An exercise that targets the legs by performing a split squat with the rear foot elevated on a bench.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "bulgarian-split-squats.jpg",
+      "video": "bulgarian-split-squats.mp4"
+    }
+  },
+  {
+    "name": "Step-Ups",
+    "description": "An exercise that targets the legs by stepping onto a platform or bench with one foot at a time.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "step-ups.jpg",
+      "video": "step-ups.mp4"
+    }
+  },
+  {
+    "name": "Glute Bridges",
+    "description": "An exercise that targets the glutes and hamstrings by lifting the hips off the ground while lying on the back.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "glute-bridges.jpg",
+      "video": "glute-bridges.mp4"
+    }
+  },
+  {
+    "name": "Sumo Squats",
+    "description": "A variation of the squat that targets the inner thighs and glutes by performing a wide-stance squat.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "60 seconds",
+    "files": {
+      "image": "sumo-squats.jpg",
+      "video": "sumo-squats.mp4"
+    }
+  },
+  {
+    "name": "Hack Squats",
+    "description": "An exercise that targets the legs by performing a squat motion on a hack squat machine.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "60 seconds",
+    "files": {
+      "image": "hack-squats.jpg",
+      "video": "hack-squats.mp4"
+    }
+  },
+  {
+    "name": "Sissy Squats",
+    "description": "An exercise that targets the quadriceps by squatting with the body leaning back and keeping the knees over the toes.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "sissy-squats.jpg",
+      "video": "sissy-squats.mp4"
+    }
+  },
+  {
+    "name": "Box Jumps",
+    "description": "A plyometric exercise that targets the legs by jumping onto a sturdy box or platform.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "60 seconds",
+    "files": {
+      "image": "box-jumps.jpg",
+      "video": "box-jumps.mp4"
+    }
+  },
+  {
+    "name": "Goblet Squats",
+    "description": "A squat variation where a weight is held at chest level with both hands while performing the squat.",
+    "targetMuscle": "Legs",
+    "category": "Legs",
+    "rest": "60 seconds",
+    "files": {
+      "image": "goblet-squats.jpg",
+      "video": "goblet-squats.mp4"
+    }
+  },
+  {
+    "name": "Crunches",
+    "description": "An exercise that targets the upper abdominal muscles by curling the torso towards the knees while lying on the back.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "crunches.jpg",
+      "video": "crunches.mp4"
+    }
+  },
+  {
+    "name": "Planks",
+    "description": "An exercise that targets the core muscles by holding a position similar to a push-up for a specified time.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "planks.jpg",
+      "video": "planks.mp4"
+    }
+  },
+  {
+    "name": "Leg Raises",
+    "description": "An exercise that targets the lower abdominal muscles by lifting the legs while lying on the back.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "leg-raises.jpg",
+      "video": "leg-raises.mp4"
+    }
+  },
+  {
+    "name": "Russian Twists",
+    "description": "An exercise that targets the obliques by twisting the torso from side to side while seated.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "russian-twists.jpg",
+      "video": "russian-twists.mp4"
+    }
+  },
+  {
+    "name": "Bicycle Crunches",
+    "description": "An exercise that targets the abdominal muscles and obliques by alternating knee-to-elbow motions while lying on the back.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "bicycle-crunches.jpg",
+      "video": "bicycle-crunches.mp4"
+    }
+  },
+  {
+    "name": "Mountain Climbers",
+    "description": "An exercise that targets the core and cardiovascular system by alternating knee drives while holding a push-up position.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "mountain-climbers.jpg",
+      "video": "mountain-climbers.mp4"
+    }
+  },
+  {
+    "name": "Hanging Leg Raises",
+    "description": "An exercise that targets the lower abs by raising the legs while hanging from a pull-up bar.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "hanging-leg-raises.jpg",
+      "video": "hanging-leg-raises.mp4"
+    }
+  },
+  {
+    "name": "V-Ups",
+    "description": "An exercise that targets the entire core by lifting the legs and torso simultaneously to form a V shape.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "v-ups.jpg",
+      "video": "v-ups.mp4"
+    }
+  },
+  {
+    "name": "Flutter Kicks",
+    "description": "An exercise that targets the lower abs and hip flexors by alternating leg kicks while lying on the back.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "flutter-kicks.jpg",
+      "video": "flutter-kicks.mp4"
+    }
+  },
+  {
+    "name": "Sit-Ups",
+    "description": "An exercise that targets the abdominal muscles by lifting the torso from a lying position to a sitting position.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "sit-ups.jpg",
+      "video": "sit-ups.mp4"
+    }
+  },
+  {
+    "name": "Side Planks",
+    "description": "An exercise that targets the obliques and entire core by holding a plank position on one side of the body.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "side-planks.jpg",
+      "video": "side-planks.mp4"
+    }
+  },
+  {
+    "name": "Toe Touches",
+    "description": "An exercise that targets the upper abs by reaching for the toes while lying on the back and lifting the legs.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "toe-touches.jpg",
+      "video": "toe-touches.mp4"
+    }
+  },
+  {
+    "name": "Reverse Crunches",
+    "description": "An exercise that targets the lower abs by curling the hips towards the torso while lying on the back.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "reverse-crunches.jpg",
+      "video": "reverse-crunches.mp4"
+    }
+  },
+  {
+    "name": "Ab Wheel Rollouts",
+    "description": "An exercise that targets the entire core by rolling an ab wheel forward and backward while maintaining a straight back.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "45 seconds",
+    "files": {
+      "image": "ab-wheel-rollouts.jpg",
+      "video": "ab-wheel-rollouts.mp4"
+    }
+  },
+  {
+    "name": "Dead Bugs",
+    "description": "An exercise that targets the core by extending opposite arms and legs while lying on the back and maintaining a neutral spine.",
+    "targetMuscle": "Core/Abs",
+    "category": "Core/Abs",
+    "rest": "30 seconds",
+    "files": {
+      "image": "dead-bugs.jpg",
+      "video": "dead-bugs.mp4"
+    }
+  },
+  {
+    "name": "Burpees",
+    "description": "A full-body exercise that combines a squat, push-up, and jump to provide a high-intensity workout.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "30 seconds",
+    "files": {
+      "image": "burpees.jpg",
+      "video": "burpees.mp4"
+    }
+  },
+  {
+    "name": "Mountain Climbers",
+    "description": "A dynamic exercise that targets the core and cardiovascular system by alternating knee drives while holding a push-up position.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "30 seconds",
+    "files": {
+      "image": "mountain-climbers.jpg",
+      "video": "mountain-climbers.mp4"
+    }
+  },
+  {
+    "name": "Jumping Jacks",
+    "description": "A cardiovascular exercise that involves jumping with arms and legs spread wide and then returning to the starting position.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "30 seconds",
+    "files": {
+      "image": "jumping-jacks.jpg",
+      "video": "jumping-jacks.mp4"
+    }
+  },
+  {
+    "name": "Bear Crawls",
+    "description": "An exercise that targets the entire body by crawling on hands and feet while keeping the hips low.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "45 seconds",
+    "files": {
+      "image": "bear-crawls.jpg",
+      "video": "bear-crawls.mp4"
+    }
+  },
+  {
+    "name": "Kettlebell Swings",
+    "description": "An exercise that targets the hips, glutes, and core by swinging a kettlebell from between the legs to shoulder height.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "45 seconds",
+    "files": {
+      "image": "kettlebell-swings.jpg",
+      "video": "kettlebell-swings.mp4"
+    }
+  },
+  {
+    "name": "Clean and Press",
+    "description": "A compound exercise that involves lifting a barbell from the ground to shoulder height and then pressing it overhead.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "60 seconds",
+    "files": {
+      "image": "clean-and-press.jpg",
+      "video": "clean-and-press.mp4"
+    }
+  },
+  {
+    "name": "Man Makers",
+    "description": "A full-body exercise that combines a push-up, row, and squat with a dumbbell press for a high-intensity workout.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "60 seconds",
+    "files": {
+      "image": "man-makers.jpg",
+      "video": "man-makers.mp4"
+    }
+  },
+  {
+    "name": "Battle Ropes",
+    "description": "An exercise that targets the upper body and core by rapidly moving ropes up and down or side to side.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "45 seconds",
+    "files": {
+      "image": "battle-ropes.jpg",
+      "video": "battle-ropes.mp4"
+    }
+  },
+  {
+    "name": "Thrusters",
+    "description": "A compound exercise that combines a squat with an overhead press using dumbbells or a barbell.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "60 seconds",
+    "files": {
+      "image": "thrusters.jpg",
+      "video": "thrusters.mp4"
+    }
+  },
+  {
+    "name": "Medicine Ball Slams",
+    "description": "An exercise that targets the entire body by raising a medicine ball overhead and then slamming it to the ground.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "45 seconds",
+    "files": {
+      "image": "medicine-ball-slams.jpg",
+      "video": "medicine-ball-slams.mp4"
+    }
+  },
+  {
+    "name": "High Knees",
+    "description": "A cardiovascular exercise that involves running in place while lifting the knees as high as possible.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "30 seconds",
+    "files": {
+      "image": "high-knees.jpg",
+      "video": "high-knees.mp4"
+    }
+  },
+  {
+    "name": "Squat to Press",
+    "description": "A compound exercise that combines a squat with an overhead press using dumbbells or a barbell.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "60 seconds",
+    "files": {
+      "image": "squat-to-press.jpg",
+      "video": "squat-to-press.mp4"
+    }
+  },
+  {
+    "name": "Plank to Push-Up",
+    "description": "An exercise that involves transitioning from a plank position to a push-up and back to engage the core and upper body.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "45 seconds",
+    "files": {
+      "image": "plank-to-push-up.jpg",
+      "video": "plank-to-push-up.mp4"
+    }
+  },
+  {
+    "name": "Tire Flips",
+    "description": "A full-body exercise that involves flipping a large tire from one side to the other, engaging multiple muscle groups.",
+    "targetMuscle": "Full Body",
+    "category": "Full Body",
+    "rest": "60 seconds",
+    "files": {
+      "image": "tire-flips.jpg",
+      "video": "tire-flips.mp4"
+    }
+  },
+  {  "name": "Farmer’s Walk",
+  "description": "An exercise that targets the grip, shoulders, and core by walking while holding heavy weights in each hand.",
+  "targetMuscle": "Full Body",
+  "category": "Full Body",
+  "rest": "60 seconds",
+  "files": {
+    "image": "farmers-walk.jpg",
+    "video": "farmers-walk.mp4"
+  }
+}
+]
