@@ -4,7 +4,9 @@ import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 import cors from 'cors'
 import routes from './routes'
-import { errorHandler, decodeRoleTokenMiddleware } from './middlewares'
+//enable errorHandler when it is implemented
+// import { errorHandler, decodeRoleTokenMiddleware } from './middlewares'
+import { decodeRoleTokenMiddleware } from './middlewares'
 import { connectMongoDB } from './config/dbConnection'
 import { corsConfig } from './config/cors'
 import passport from 'passport'
@@ -93,7 +95,7 @@ app.use(passport.session())
 // )
 app.use('/api-docs', configSwagger)
 app.use('/api', routes)
-app.use(errorHandler)
+// app.use(errorHandler)
 
 app.get('/ping', (req, res) => res.send('Ping Successfulls 😄'))
 
