@@ -49,8 +49,8 @@ export default class Email {
       return mailOptions
     }
 
-    const loginLink = getLoginLinkByEnv()
-    emailProps.loginLink = loginLink
+    // const loginLink = getLoginLinkByEnv()
+    // emailProps.loginLink = loginLink
     console.log('EMAIL PROPS', emailProps)
 
     const res = await ejs.renderFile(path.join(__dirname, `../templates/${template}.ejs`), {

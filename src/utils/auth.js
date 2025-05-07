@@ -6,7 +6,7 @@ export const generateToken = (payload) => {
     const tokens = {}
 
     tokens.accessToken = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '7d' }) //1m,1d,1y
-    tokens.refreshToken = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '60m' }) // 1m,1d,1y
+    // tokens.refreshToken = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '60m' }) // 1m,1d,1y
 
     resolve(tokens)
   })

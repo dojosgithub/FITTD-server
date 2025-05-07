@@ -72,6 +72,29 @@ export const getFacebookUserData = async (access_token) => {
   })
   return data
 }
+export const getAllProducts = async (baseUrl, limit = 250) => {
+  let page = 1
+  let allProducts = []
+
+  while (true) {
+    const url = `${baseUrl}?limit=${limit}&page=${page}`
+    try {
+      const response = await axios.get(url)
+      const products = response.data.products
+
+      if (!products || products.length === 0) break
+
+      allProducts = allProducts.concat(products)
+      if (products.length < limit) break // No more pages
+      page++
+    } catch (error) {
+      console.error(`Error fetching page ${page} from ${baseUrl}:`, error.message)
+      break
+    }
+  }
+
+  return allProducts
+}
 
 export const getRandomString = () => {
   const random = Math.random().toString(36)

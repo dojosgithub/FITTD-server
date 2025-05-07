@@ -12,7 +12,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     resource_type: 'auto',
-    folder: process.env.NODE_ENV == 'development' ? 'zeal-dev' : 'zeal',
+    folder: process.env.NODE_ENV == 'development' ? 'FITTD-dev' : 'FITTD',
     format: async (req, file) => file.originalname.substr(file.originalname.lastIndexOf('.') + 1), // supports promises as well
     public_id: (req, file) => Date.now().toString(),
     transformation: {

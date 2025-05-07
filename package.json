@@ -61,6 +61,7 @@
     "aws-sdk": "^2.1087.0",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
+    "cheerio": "^1.0.0",
     "cloudinary": "^1.41.3",
     "cognito-express": "^3.0.1",
     "convert-excel-to-json": "^1.7.0",
@@ -98,10 +99,14 @@
     "npm-run-all": "^4.1.5",
     "numeral": "^2.0.6",
     "ordersid-generator": "^1.9.3",
+    "p-limit": "^6.2.0",
     "passport": "^0.7.0",
     "passport-google-oauth2": "^0.2.0",
     "passport-google-oauth20": "^2.0.0",
-    "puppeteer": "^14.1.2",
+    "puppeteer": "^14.4.1",
+    "puppeteer-cluster": "^0.24.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "quickchart-js": "^3.0.1",
     "socket.io": "^4.7.4",
     "speakeasy": "^2.0.0",
@@ -109,6 +114,8 @@
     "stripe": "^8.213.0",
     "swagger-ui-express": "^4.5.0",
     "twilio": "^4.22.0",
-    "yamljs": "^0.3.0"
+    "uninstall": "^0.0.0",
+    "yamljs": "^0.3.0",
+    "zenrows": "^2.0.1"
   }
 }

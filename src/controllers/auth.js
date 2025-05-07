@@ -1,0 +1,230 @@
+import { asyncMiddleware } from '../middlewares'
+import { TOTP, User, UserMeasurement } from '../models'
+import { StatusCodes } from 'http-status-codes'
+import dotenv from 'dotenv'
+import { comparePassword, generateOTToken, generatePassword, generateToken, verifyTOTPToken } from '../utils'
+import speakeasy, { totp } from 'speakeasy'
+import { isEmpty } from 'lodash'
+import Email from '../utils/email'
+import { sendSMS } from '../utils/smsUtil'
+import { generateOTP } from '../utils/generateOtp'
+
+dotenv.config()
+
+export const CONTROLLER_AUTH = {
+  signup: asyncMiddleware(async (req, res) => {
+    const { name, email, mobile, password } = req.body
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ $or: [{ email }, { mobile }] })
+    if (existingUser) {
+      return res.status(StatusCodes.CONFLICT).json({
+        message: 'User with this email or mobile number already exists.',
+      })
+    }
+    const hashedPassword = await generatePassword(password)
+    // Create new user
+    const user = new User({
+      name,
+      email,
+      mobile,
+      password: hashedPassword, // You should hash this before saving in production!
+    })
+
+    await user.save()
+    const code = await generateOTP({ email })
+    const sendEmail = await new Email({ email })
+    const emailProps = { code, name: user.name }
+    await sendEmail.welcomeToZeal(emailProps)
+
+    // await sendSMS(`Your time based one time login code is: ${code}`, mobile) // UTL
+
+    const userObj = user.toObject()
+    delete userObj.password
+
+    res.status(StatusCodes.CREATED).json({
+      message: 'User registered successfully',
+      data: userObj,
+    })
+  }),
+
+  forgotPassword: asyncMiddleware(async (req, res) => {
+    const { email } = req.body
+    if (!email) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Email is required.' })
+    }
+
+    // Find the user based on email or mobile
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: 'No user found with the provided email or mobile number.',
+      })
+    }
+
+    // Generate OTP and TOTP token
+    const code = await generateOTP({ email })
+    const sendEmail = await new Email({ email })
+    const emailProps = { code, name: user.name }
+    await sendEmail.sendForgotPassword(emailProps)
+    return res.status(StatusCodes.OK).json({ message: 'Verification code sent.' })
+  }),
+  verifyOtp: asyncMiddleware(async (req, res) => {
+    const { email, mobile, code, isVerification } = req.body
+
+    // Check at least one identifier is provided
+    if (!email && !mobile) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Email or mobile is required for verification.' })
+    }
+
+    // Fetch and delete the stored TOTP token
+    const totp = await TOTP.findOne(email ? { email } : { mobile })
+
+    if (!totp) {
+      return res.status(400).json({ message: 'No OTP record found or it has already been used.' })
+    }
+
+    // Decode and verify the TOTP
+    const decoded = await verifyTOTPToken(totp.token)
+    const verified = speakeasy.totp.verify({
+      digits: 6,
+      secret: decoded.secret,
+      encoding: 'base32',
+      token: code,
+      window: 10,
+    })
+
+    if (verified) {
+      await TOTP.deleteOne({ _id: totp._id })
+      const user = await User.findOne(email ? { email } : { mobile })
+      if (!user) {
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' })
+      }
+      if (isVerification) {
+        user.isVerified = true
+      }
+      await user.save()
+      return res.status(StatusCodes.OK).json({ message: 'OTP verified successfully.' })
+    }
+
+    res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid verification code.' })
+  }),
+
+  signIn: asyncMiddleware(async (req, res) => {
+    const { email, mobile, password } = req.body
+
+    // Search by email or mobile
+    const user = await User.findOne({
+      $or: [{ email }, { mobile }],
+    }).select('+password')
+
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: 'User not found.',
+      })
+    }
+    const isAuthenticated = await comparePassword(password, user.password)
+
+    if (!isAuthenticated) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: 'Incorrect password or email.',
+      })
+    }
+
+    const tokenPayload = {
+      _id: user._id,
+    }
+
+    const tokens = await generateToken(tokenPayload)
+
+    await user.save()
+
+    const userObj = user.toObject()
+    delete userObj.password
+    res.status(StatusCodes.OK).json({
+      data: {
+        user: userObj,
+        tokens,
+      },
+      message: 'Logged In Successfully',
+    })
+  }),
+
+  changePassword: asyncMiddleware(async (req, res) => {
+    const { mobile, email, oldPassword, password } = req.body
+    if (!email && !mobile) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Email or mobile is required' })
+    }
+
+    const user = await User.findOne({
+      $or: [{ email }, { mobile }],
+    }).select('+password')
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
+    }
+    if (oldPassword) {
+      const isAuthenticated = await comparePassword(oldPassword, user.password)
+
+      if (!isAuthenticated) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Password does not matched' })
+      }
+
+      // Check if the new password is the same as the old password
+      const isSamePassword = await comparePassword(password, user.password)
+      if (isSamePassword) {
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ message: 'New password cannot be the same as the old password' })
+      }
+    }
+    const hashedPassword = await generatePassword(password)
+
+    await User.findByIdAndUpdate(user._id, { password: hashedPassword }, { new: true })
+
+    // console.log(`Password updated for ${email}`)
+    res.json({ message: 'Password updated successfully' })
+  }),
+
+  signOut: asyncMiddleware(async (req, res) => {
+    const { _id: userId } = req.decoded
+
+    if (!userId) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'User id not found' })
+    }
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
+    }
+
+    res.status(StatusCodes.OK).json({ message: 'Logged out successfully' })
+  }),
+
+  deleteAccount: asyncMiddleware(async (req, res) => {
+    const { _id: userId } = req.decoded // Decoded userId from JWT token
+
+    if (!userId) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'User ID not found' })
+    }
+
+    // 1. Find the user in the database
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
+    }
+
+    // 2. Delete associated user measurements (if exists)
+    await UserMeasurement.deleteOne({ userId })
+
+    // 3. Optionally, you can delete other related data like user settings, logs, etc.
+    // Example: await UserSettings.deleteOne({ userId })
+
+    // 4. Delete the user
+    await User.findByIdAndDelete(userId)
+
+    // 5. Send response
+    res.status(StatusCodes.OK).json({
+      message: 'Account and associated data deleted successfully',
+    })
+  }),
+}
