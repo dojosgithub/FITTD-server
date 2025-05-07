@@ -14,6 +14,7 @@
     "oldProd": "npx cross-env NODE_ENV=production npm-run-all build post-build server",
     "post-build": "cpx \"public/*\" \"dist/public\" && cpx \"templates/*\" \"dist/templates\" && cpx \"./swagger.json\" \"dist/\"",
     "heroku-cleanup": "cpx \"public/*\" \"dist/public\" && cpx \"templates/*\" \"dist/templates\" && cpx \"./swagger.json\" \"dist/\"",
+    "heroku-postbuild": "npm install --legacy-peer-deps && npm run build && npm run heroku-cleanup",
     "transpile": "babel ./src --out-dir dist",
     "clean": "rimraf dist",
     "squeaky-clean": "rimraf dist node_modules",
