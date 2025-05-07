@@ -34,7 +34,6 @@ export const CONTROLLER_USER = {
   verifyOrUpdateProfile: asyncMiddleware(async (req, res) => {
     const { _id: userId } = req.decoded
     const { email, mobile, isVerified } = req.body
-
     if (!userId) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'User ID not found' })
     }
@@ -80,7 +79,7 @@ export const CONTROLLER_USER = {
       data: user,
       message: isVerified
         ? 'Profile updated successfully'
-        : 'Verification required. OTP has been sent to your new contact information.',
+        : 'Verification required. OTP has been sent to your new email.',
     })
   }),
   updateProfile: asyncMiddleware(async (req, res) => {

@@ -8,6 +8,7 @@ import { isEmpty } from 'lodash'
 import Email from '../utils/email'
 import { sendSMS } from '../utils/smsUtil'
 import { generateOTP } from '../utils/generateOtp'
+import { authenticateGoogleUser, signinOAuthUser, signupOAuthUser } from '../services'
 
 dotenv.config()
 
@@ -123,6 +124,16 @@ export const CONTROLLER_AUTH = {
         message: 'User not found.',
       })
     }
+    if (!user.isVerified) {
+      const code = await generateOTP({ email: user.email })
+      const sendEmail = new Email({ email: user.email })
+      const emailProps = { code, name: user.name }
+      await sendEmail.welcomeToZeal(emailProps)
+
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        message: 'Account not verified. Verification code resent to email.',
+      })
+    }
     const isAuthenticated = await comparePassword(password, user.password)
 
     if (!isAuthenticated) {
@@ -148,6 +159,48 @@ export const CONTROLLER_AUTH = {
       },
       message: 'Logged In Successfully',
     })
+  }),
+  OAuth: asyncMiddleware(async (req, res) => {
+    const { auth_type, token_id, userID, access_token, fcmToken } = req.body
+    console.log('BODY:', req.body)
+    let userData
+    switch (auth_type) {
+      case 'google':
+        userData = await authenticateGoogleUser(token_id)
+        if (isEmpty(userData))
+          return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Error occurred during google OAUTH' })
+        break
+      // case 'facebook':
+      //   userData = await authenticateFacebookUser(access_token)
+      //   console.log('FACEBOOK', userData)
+      //   if (isEmpty(userData))
+      //     return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Error occurred during facebook OAUTH' })
+      //   break
+      default:
+        return res.status(StatusCodes.BAD_REQUEST).json({ auth_type: 'Please provide a valid auth type' })
+    }
+    const { email } = userData
+    let userExists = await User.findOne({ email: email })
+    if (isEmpty(userExists)) userExists = await signupOAuthUser(userData, fcmToken)
+    if (userExists) {
+      if (userExists.accountType !== 'Google-Account') {
+        return res.status(StatusCodes.FORBIDDEN).json({
+          message: 'Not a Google account try logging it with FITTD account',
+        })
+      } else {
+        await User.findOneAndUpdate(
+          { email: email },
+          {
+            // fcmToken,
+            accountType: 'Google-Account',
+          }
+        )
+      }
+      // userExists.fcmToken = fcmToken
+    }
+    const response = await signinOAuthUser(userExists)
+    if (isEmpty(response)) return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Not able to login via OAuth' })
+    res.status(StatusCodes.ACCEPTED).json(response.data)
   }),
 
   changePassword: asyncMiddleware(async (req, res) => {

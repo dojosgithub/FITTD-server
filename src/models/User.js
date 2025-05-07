@@ -27,6 +27,7 @@ export const userSchema = new Schema(
     },
     image: { type: String, default: null },
     isVerified: { type: Boolean, default: false },
+    accountType: { type: String, default: 'FITTD-Account' },
     measurements: { type: mongoose.Schema.Types.ObjectId, ref: 'UserMeasurement', default: null },
   },
   { versionKey: false, timestamps: true }

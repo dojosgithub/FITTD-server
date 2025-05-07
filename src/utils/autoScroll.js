@@ -1,57 +1,23 @@
-// export const autoScroll = async (page) => {
-//   await page.evaluate(() => {
-//     return new Promise((resolve) => {
-//       let totalHeight = 0
-//       const distance = 100
-//       const timer = setInterval(() => {
-//         const scrollHeight = document.body.scrollHeight
-//         window.scrollBy(0, distance)
-//         totalHeight += distance
-
-//         if (totalHeight >= scrollHeight) {
-//           clearInterval(timer)
-//           resolve()
-//         }
-//       }, 100)
-//     })
-//   })
-// }
-// export const autoScroll = async (page) => {
-//   await page.evaluate(() => {
-//     return new Promise((resolve) => {
-//       let totalHeight = 0
-//       const distance = 100
-//       let scrollAttempts = 0
-//       const maxScrollAttempts = 5 // Number of checks without height change before stopping
-
-//       console.log('🌀 Starting autoScroll...')
-
-//       const timer = setInterval(() => {
-//         const scrollHeight = document.body.scrollHeight
-//         window.scrollBy(0, distance)
-//         totalHeight += distance
-
-//         console.log(`📏 Scrolled to ${totalHeight}px / Page height: ${scrollHeight}px`)
-
-//         // If totalHeight is not growing anymore, we assume it's fully loaded
-//         if (totalHeight >= scrollHeight) {
-//           scrollAttempts++
-//           console.log(`🔁 No new content detected. Attempt ${scrollAttempts}/${maxScrollAttempts}`)
-//         } else {
-//           scrollAttempts = 0 // Reset if page grew
-//         }
-
-//         if (scrollAttempts >= maxScrollAttempts) {
-//           clearInterval(timer)
-//           console.log('✅ Finished scrolling. Page fully loaded.')
-//           resolve()
-//         }
-//       }, 200) // Slower scroll interval to allow content to load
-//     })
-//   })
-// }
-
 export const autoScroll = async (page) => {
+  await page.evaluate(() => {
+    return new Promise((resolve) => {
+      let totalHeight = 0
+      const distance = 100
+      const timer = setInterval(() => {
+        const scrollHeight = document.body.scrollHeight
+        window.scrollBy(0, distance)
+        totalHeight += distance
+
+        if (totalHeight >= scrollHeight) {
+          clearInterval(timer)
+          resolve()
+        }
+      }, 100)
+    })
+  })
+}
+
+export const autoScrollReformationProducts = async (page) => {
   await page.evaluate(() => {
     return new Promise((resolve) => {
       const distance = 5000 // scroll distance
@@ -96,6 +62,7 @@ const countValidProducts = async (page) => {
     }).length
   })
 }
+
 export const loadMoreProducts = async (
   page,
   productSelector = 'div.flex.transition-all.w-full',

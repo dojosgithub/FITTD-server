@@ -12,11 +12,17 @@ const MAX_CONCURRENCY = 10
 
 import { asyncMiddleware } from '../middlewares'
 import { Product } from '../models'
-import { categorizeProducts, loadMoreSelfPotraitProducts } from '../utils'
+import {
+  autoScrollReformationProducts,
+  categorizeProducts,
+  loadAllProducts,
+  loadMoreSelfPotraitProducts,
+} from '../utils'
 import { autoScroll, loadMoreProducts } from '../utils'
 import { getAllProducts } from '../utils'
 import { normalizeHtml } from '../utils'
 import { fetchSecondaryImages } from '../utils'
+import { categorizeProductByName, groupedByType } from '../utils/houseOfCBCategories'
 
 let globalBrowser = null
 
@@ -586,17 +592,17 @@ const getHouseOfCbProductUrlsFromCategory = async (categoryUrl, existingPage = n
     return []
   }
   try {
-    await loadMoreProducts(page)
+    // await loadMoreProducts(page)
     const products = await extractHouseOfCBProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
     console.log(`🔄 Fetching descriptions for ${products.length} products...`)
-    const productsWithDescriptions = await scrapeProductsInParallel(
-      products,
-      page.browser(),
-      fetchHouseOfCBProductDescription
-    )
+    // const productsWithDescriptions = await scrapeProductsInParallel(
+    //   products,
+    //   page.browser(),
+    //   fetchHouseOfCBProductDescription
+    // )
     // console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    return productsWithDescriptions
+    return products
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
     return []
@@ -797,20 +803,22 @@ const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = n
   if (!page) {
     return []
   }
-
+  page.on('console', (msg) => {
+    if (msg.type() === 'log') {
+      console.log(`🧠 BROWSER LOG: ${msg.text()}`)
+    }
+  })
   try {
-    // await autoScroll(page)
-
     const products = await extractLuluLemonProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    console.log(`🔄 Fetching descriptions for ${products.length} products...`)
-    const productsWithDescriptions = await scrapeProductsInParallel(
-      products,
-      page.browser(),
-      fetchLuluLemonProductDescription
-    )
+    // console.log(`🔄 Fetching descriptions for ${products.length} products...`)
+    // const productsWithDescriptions = await scrapeProductsInParallel(
+    //   products,
+    //   page.browser(),
+    //   fetchLuluLemonProductDescription
+    // )
     // console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    return productsWithDescriptions
+    return products
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
     return []
@@ -834,17 +842,16 @@ const extractLuluLemonProductsFromPage = async (page, baseUrl) => {
 
         products.push({
           name: title,
-          description: '',
-          // gender: 'male', // You may update this dynamically if needed
-          url: absoluteUrl,
-          price,
-          image: {
-            primary: '',
-            secondary: [],
-          },
-          sizes: [],
-          rating: null,
-          reviewCount: null,
+          // description: '',
+          // url: absoluteUrl,
+          // price,
+          // image: {
+          //   primary: '',
+          //   secondary: [],
+          // },
+          // sizes: [],
+          // rating: null,
+          // reviewCount: null,
         })
       }
     })
@@ -958,7 +965,7 @@ const getTheReformationProductUrlsFromCategory = async (categoryUrl, existingPag
     }
   })
   try {
-    // await autoScroll(page)
+    await autoScrollReformationProducts(page, '.product-grid__item')
     const products = await extractTheReformationProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
     // console.log(`🔄 Fetching descriptions for ${products.length} products...`)
@@ -1210,9 +1217,21 @@ export const CONTROLLER_SCRAPER = {
       const [menProductsRaw, womenProductsRaw] = await Promise.all([getAllProducts(menUrl), getAllProducts(womenUrl)])
 
       // Transform data
-      const menProducts = transformProducts(menProductsRaw)
-      const womenProducts = transformProducts(womenProductsRaw)
+      const menProducts = transformProducts(menProductsRaw).map((product) => ({
+        ...product,
+        gender: 'male',
+      }))
 
+      const womenProducts = transformProducts(womenProductsRaw).map((product) => ({
+        ...product,
+        gender: 'female',
+      }))
+      const allProducts = [...menProducts, ...womenProducts]
+
+      for (const product of allProducts) {
+        const cat = categorizeProductByName(product.name)
+        groupedByType[cat].push(product)
+      }
       // const categorizedProducts = await categorizeProducts(products)
       // // Save products to DB
       // for (const product of products) {
@@ -1223,7 +1242,7 @@ export const CONTROLLER_SCRAPER = {
 
       // Respond with the scraped products data
       res.status(StatusCodes.OK).json({
-        data: { men: menProducts, women: womenProducts },
+        data: groupedByType,
         // results: transformedProducts.length,
         message: 'Products Fetched and Saved successfully',
       })
@@ -1239,22 +1258,25 @@ export const CONTROLLER_SCRAPER = {
     // Scrape products from Dior (or your specific source)
 
     try {
-      // const categoryUrl = 'https://app.houseofcb.com/category?category_id=2' // Example category URL
-
-      // const products = await getHouseOfCbProductUrlsFromCategory(categoryUrl)
       const categories = [
         { type: 'accessories', url: 'https://app.houseofcb.com/category?category_id=11' },
         { type: 'clothing', url: 'https://app.houseofcb.com/category?category_id=2' },
       ]
 
-      const groupedByType = {}
-      let products = []
       for (const category of categories) {
-        products = await getHouseOfCbProductUrlsFromCategory(category.url)
-        if (!groupedByType[category.type]) {
-          groupedByType[category.type] = []
+        const products = await getHouseOfCbProductUrlsFromCategory(category.url)
+
+        for (const product of products) {
+          let cat
+
+          if (category.type === 'accessories') {
+            cat = 'accessories'
+          } else {
+            cat = categorizeProductByName(product.name)
+          }
+
+          groupedByType[cat].push(product)
         }
-        groupedByType[category.type].push(...products)
       }
       // const categorizedProducts = await categorizeProducts(products)
       // // Save products to DB
@@ -1269,7 +1291,7 @@ export const CONTROLLER_SCRAPER = {
       // )
       // Respond with the scraped products data
       res.status(StatusCodes.OK).json({
-        results: products.length,
+        // results: products.length,
         data: groupedByType,
         message: 'Products Fetched and Saved successfully',
       })
@@ -1337,7 +1359,6 @@ export const CONTROLLER_SCRAPER = {
         { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
       ]
 
-      const groupedByType = {}
       let products = []
       for (const category of categories) {
         products = await getLuluLemonProductUrlsFromCategory(category.url)
@@ -1347,11 +1368,14 @@ export const CONTROLLER_SCRAPER = {
           ...product,
           gender,
         }))
-
-        if (!groupedByType[category.type]) {
-          groupedByType[category.type] = []
+        for (const product of productsWithGender) {
+          const cat = categorizeProductByName(product.name)
+          groupedByType[cat].push(product)
         }
-        groupedByType[category.type].push(...productsWithGender)
+        // if (!groupedByType[category.type]) {
+        //   groupedByType[category.type] = []
+        // }
+        // groupedByType[category.type].push(...productsWithGender)
       }
       // const categorizedProducts = await categorizeProducts(products)
       // // Save products to DB
@@ -1366,7 +1390,7 @@ export const CONTROLLER_SCRAPER = {
       // )
       // Respond with the scraped products data
       res.status(StatusCodes.OK).json({
-        results: products.length,
+        // results: products.length,
         data: groupedByType,
         message: 'Products Fetched and Saved successfully',
       })

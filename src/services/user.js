@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken'
 
 // * Models
 import { User } from '../models'
+import Email from '../utils/email'
+import { OAuth2Client } from 'google-auth-library'
 
 // * Configs
 // import { getCognitoClient } from '../config/aws'
@@ -28,27 +30,17 @@ export const createUser = async (payload) => {
 
 // -----oauth -----
 
-// export const authenticateGoogleUser = async (token_id) => {
-//   const client = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID)
-//   const clientResponse = await client.verifyIdToken({ idToken: token_id, audience: process.env.GOOGLE_OAUTH_CLIENT_ID })
+export const authenticateGoogleUser = async (token_id) => {
+  const client = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID)
+  const clientResponse = await client.verifyIdToken({ idToken: token_id, audience: process.env.GOOGLE_OAUTH_CLIENT_ID })
 
-//   const { email_verified, picture, email, given_name, family_name } = clientResponse.payload
+  const { email_verified, picture, email, given_name, family_name } = clientResponse.payload
 
-//   if (!email_verified) return null
+  if (!email_verified) return null
 
-//   // const user = await checkUserExists(null, email);
-
-//   const signupUserData = { email, picture, firstName: given_name, lastName: family_name }
-//   return signupUserData
-//   // let res;
-
-//   // if (isEmpty(user))
-//   //     res = await signupOAuthUser(signupUserData)
-//   // else
-//   //     res = await loginOAuthUser()
-
-//   // return res
-// }
+  const signupUserData = { email, picture, firstName: given_name, lastName: family_name }
+  return signupUserData
+}
 
 // export const authenticateFacebookUser = async (access_token) => {
 //   const fbUser = await getFacebookUserData(access_token)
@@ -67,53 +59,39 @@ export const createUser = async (payload) => {
 //   return signupUserData
 // }
 
-// export const signupOAuthUser = async (signupUserData, fcmToken) => {
-//   const { email, picture, firstName, lastName } = signupUserData
+export const signupOAuthUser = async (signupUserData, fcmToken) => {
+  const { email, picture, firstName, lastName } = signupUserData
+  const fullName = `${firstName} ${lastName}`.trim()
+  const newUser = new User({
+    email,
+    image: picture,
+    name: fullName,
+    accountType: 'Google-Account',
+    isVerified: true,
+    // fcmToken,
+  })
 
-//   const newUser = new User({
-//     email,
-//     file: picture,
-//     firstName,
-//     lastName,
-//     accountType: 'Google-Account',
-//     userTypes: [USER_TYPES.USR],
-//     role: { name: SYSTEM_USER_ROLE.USR, shortName: getRoleShortName(USER_TYPES.USR, SYSTEM_USER_ROLE.USR) },
-//     level: USER_LEVELS.BEG,
-//     fcmToken,
-//   })
+  await newUser.save()
 
-//   await newUser.save()
+  const sendEmail = await new Email({ email })
+  const emailProps = { name: fullName }
+  await sendEmail.welcomeToZeal(emailProps)
 
-//   const sendEmail = await new Email({ email })
-//   const emailProps = { firstName }
-//   await sendEmail.welcomeToZeal(emailProps)
+  return newUser.toObject()
+}
 
-//   return newUser.toObject()
-// }
+export const signinOAuthUser = async (user) => {
+  const token = {
+    _id: user._id,
+  }
+  const jwtToken = await generateToken(token)
 
-// export const signinOAuthUser = async (user, ip) => {
-//   const token = {
-//     _id: user._id,
-//     role: user.role,
-//     userTypes: user.userTypes,
-//   }
-//   const jwtToken = await generateToken(token)
-
-//   // const refreshTokenPayload = {
-//   //   _id: user._id,
-//   //   role: user.role,
-//   // }
-//   // console.log('refreshTokenPayload', refreshTokenPayload)
-//   // const refreshToken = await generateToken(refreshTokenPayload, ip)
-//   // await refreshToken.save()
-
-//   return {
-//     data: {
-//       user,
-//       tokens: {
-//         accessToken: jwtToken,
-//       },
-//     },
-//     // refreshToken: refreshToken.token,
-//   }
-// }
+  return {
+    data: {
+      user,
+      tokens: {
+        accessToken: jwtToken,
+      },
+    },
+  }
+}
