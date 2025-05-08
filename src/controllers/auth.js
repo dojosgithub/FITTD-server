@@ -72,15 +72,15 @@ export const CONTROLLER_AUTH = {
     return res.status(StatusCodes.OK).json({ message: 'Verification code sent.' })
   }),
   verifyOtp: asyncMiddleware(async (req, res) => {
-    const { email, mobile, code, isVerification } = req.body
+    const { email, code, isVerification } = req.body
 
     // Check at least one identifier is provided
-    if (!email && !mobile) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Email or mobile is required for verification.' })
+    if (!email) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Email is required for verification.' })
     }
 
     // Fetch and delete the stored TOTP token
-    const totp = await TOTP.findOne(email ? { email } : { mobile })
+    const totp = await TOTP.findOne({ email })
 
     if (!totp) {
       return res.status(400).json({ message: 'No OTP record found or it has already been used.' })
@@ -98,7 +98,7 @@ export const CONTROLLER_AUTH = {
 
     if (verified) {
       await TOTP.deleteOne({ _id: totp._id })
-      const user = await User.findOne(email ? { email } : { mobile })
+      const user = await User.findOne({ email })
       if (!user) {
         return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' })
       }
@@ -206,14 +206,13 @@ export const CONTROLLER_AUTH = {
   }),
 
   changePassword: asyncMiddleware(async (req, res) => {
-    const { mobile, email, oldPassword, password } = req.body
-    if (!email && !mobile) {
+    const { email, oldPassword, password } = req.body
+    if (!email) {
       return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Email or mobile is required' })
     }
 
-    const user = await User.findOne({
-      $or: [{ email }, { mobile }],
-    }).select('+password')
+    const user = await User.findOne({ email }).select('+password')
+    console.log('user', user)
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
     }
@@ -233,7 +232,7 @@ export const CONTROLLER_AUTH = {
       }
     }
     const hashedPassword = await generatePassword(password)
-
+    console.log('Generated password:', password)
     await User.findByIdAndUpdate(user._id, { password: hashedPassword }, { new: true })
 
     // console.log(`Password updated for ${email}`)

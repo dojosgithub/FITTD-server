@@ -13,9 +13,11 @@ const MAX_CONCURRENCY = 10
 import { asyncMiddleware } from '../middlewares'
 import { Product } from '../models'
 import {
+  autoScrollAndClick,
   autoScrollReformationProducts,
   categorizeProducts,
   loadAllProducts,
+  loadMoreLuluLemonProducts,
   loadMoreSelfPotraitProducts,
 } from '../utils'
 import { autoScroll, loadMoreProducts } from '../utils'
@@ -29,7 +31,8 @@ let globalBrowser = null
 const getBrowser = async () => {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
-      headless: 'new',
+      // headless: 'new',
+      headless: false,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -37,6 +40,11 @@ const getBrowser = async () => {
         '--disable-accelerated-2d-canvas',
         '--disable-gpu',
         '--window-size=1920,1080',
+        // Avoid detection
+        '--disable-blink-features=AutomationControlled',
+        // Enable necessary features
+        '--enable-javascript',
+        '--enable-cookies',
       ],
     })
   }
@@ -122,7 +130,7 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null) => {
       page = await browser.newPage()
 
       // Set realistic viewport and user agent
-      await page.setViewport({ width: 1920, height: 1080 })
+      await page.setViewport({ width: 1280, height: 960 })
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       )
@@ -141,7 +149,7 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null) => {
     })
 
     if (waitForSelector) {
-      await page.waitForSelector(waitForSelector, { timeout: 30000 })
+      await page.waitForSelector(waitForSelector, { timeout: 60000 })
     }
 
     return page
@@ -797,7 +805,7 @@ const fetchLuluLemonProductDescription = async (url, page) => {
 }
 
 const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
-  const selector = '.product-list_productListItem__uA9Id'
+  const selector = 'div.product-list_productListItem__uA9Id[data-testid="product-tile"]'
   const page = await setupPage(categoryUrl, selector, existingPage)
 
   if (!page) {
@@ -809,8 +817,9 @@ const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = n
     }
   })
   try {
+    await loadMoreLuluLemonProducts(page)
     const products = await extractLuluLemonProductsFromPage(page, categoryUrl)
-    console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
+    // console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
     // console.log(`🔄 Fetching descriptions for ${products.length} products...`)
     // const productsWithDescriptions = await scrapeProductsInParallel(
     //   products,
@@ -1356,7 +1365,7 @@ export const CONTROLLER_SCRAPER = {
           type: 'men',
           url: 'https://shop.lululemon.com/c/men-clothes/n1oxc7',
         },
-        { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
+        // { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
       ]
 
       let products = []
