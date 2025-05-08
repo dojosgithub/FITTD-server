@@ -22,7 +22,7 @@ import { autoScroll, loadMoreProducts } from '../utils'
 import { getAllProducts } from '../utils'
 import { normalizeHtml } from '../utils'
 import { fetchSecondaryImages } from '../utils'
-import { categorizeProductByName, groupedByType } from '../utils/houseOfCBCategories'
+import { categorizeProductByName, groupedByType } from '../utils'
 
 let globalBrowser = null
 

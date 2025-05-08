@@ -126,6 +126,14 @@ export const CONTROLLER_AUTH = {
         message: 'User not found.',
       })
     }
+
+    const isAuthenticated = await comparePassword(password, user.password)
+
+    if (!isAuthenticated) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: 'Incorrect password or email.',
+      })
+    }
     if (!user.isVerified) {
       const code = await generateOTP({ email: user.email })
       const sendEmail = new Email({ email: user.email })
@@ -136,14 +144,6 @@ export const CONTROLLER_AUTH = {
         message: 'Account not verified. Verification code resent to email.',
       })
     }
-    const isAuthenticated = await comparePassword(password, user.password)
-
-    if (!isAuthenticated) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: 'Incorrect password or email.',
-      })
-    }
-
     const tokenPayload = {
       _id: user._id,
     }
