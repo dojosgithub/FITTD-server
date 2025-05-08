@@ -37,7 +37,7 @@ export const CONTROLLER_AUTH = {
     const code = await generateOTP({ email })
     const sendEmail = await new Email({ email })
     const emailProps = { code, name: user.name }
-    await sendEmail.welcomeToZeal(emailProps)
+    await sendEmail.sendForgotPassword(emailProps)
 
     // await sendSMS(`Your time based one time login code is: ${code}`, mobile) // UTL
 
@@ -130,7 +130,7 @@ export const CONTROLLER_AUTH = {
       const code = await generateOTP({ email: user.email })
       const sendEmail = new Email({ email: user.email })
       const emailProps = { code, name: user.name }
-      await sendEmail.welcomeToZeal(emailProps)
+      await sendEmail.sendForgotPassword(emailProps)
 
       return res.status(StatusCodes.UNAUTHORIZED).json({
         message: 'Account not verified. Verification code resent to email.',
