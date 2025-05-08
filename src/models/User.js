@@ -14,11 +14,11 @@ export const userSchema = new Schema(
       unique: true,
     },
 
-    mobile: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+    // mobile: {
+    //   type: String,
+    //   required: true,
+    //   unique: true,
+    // },
 
     password: {
       type: String,
@@ -53,7 +53,7 @@ export const validateRegistration = (obj) => {
   const schema = Joi.object({
     name: Joi.string().required(),
     email: Joi.string().email({ minDomainSegments: 2 }).required(),
-    mobile: Joi.string().required(),
+    // mobile: Joi.string().required(),
     password: Joi.string().required(),
   }).options({ abortEarly: false })
 

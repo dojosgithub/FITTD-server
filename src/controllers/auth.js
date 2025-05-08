@@ -14,10 +14,11 @@ dotenv.config()
 
 export const CONTROLLER_AUTH = {
   signup: asyncMiddleware(async (req, res) => {
-    const { name, email, mobile, password } = req.body
+    const { name, email, password } = req.body
 
     // Check if user already exists
-    const existingUser = await User.findOne({ $or: [{ email }, { mobile }] })
+    const existingUser = await User.findOne({ email })
+    // const existingUser = await User.findOne({ $or: [{ email }, { mobile }] })
     if (existingUser) {
       return res.status(StatusCodes.CONFLICT).json({
         message: 'User with this email or mobile number already exists.',
@@ -28,7 +29,7 @@ export const CONTROLLER_AUTH = {
     const user = new User({
       name,
       email,
-      mobile,
+      // mobile,
       password: hashedPassword, // You should hash this before saving in production!
     })
 
@@ -112,12 +113,13 @@ export const CONTROLLER_AUTH = {
   }),
 
   signIn: asyncMiddleware(async (req, res) => {
-    const { email, mobile, password } = req.body
+    const { email, password } = req.body
 
     // Search by email or mobile
-    const user = await User.findOne({
-      $or: [{ email }, { mobile }],
-    }).select('+password')
+    // const user = await User.findOne({
+    //   $or: [{ email }, { mobile }],
+    // }).select('+password')
+    const user = await User.findOne({ email }).select('+password')
 
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({
