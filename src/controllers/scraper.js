@@ -1419,36 +1419,36 @@ export const CONTROLLER_SCRAPER = {
         { type: 'women', url: 'https://www.jcrew.com/plp/womens?Npge=1&Nrpp=9' },
       ]
 
-      // let products = []
-      // for (const category of categories) {
-      //   products = await getJCrewProductUrlsFromCategory(category.url)
-      //   // Add gender to each product
-      //   const gender = category.type === 'men' ? 'male' : 'female'
-      //   const productsWithGender = products.map((product) => ({
-      //     ...product,
-      //     gender,
-      //   }))
-      //   for (const product of productsWithGender) {
-      //     const cat = categorizeProductByName(product.name)
-      //     groupedByType[cat].push(product)
-      //   }
-      // }
-      const scrapeCategory = async (category) => {
-        const products = await getJCrewProductUrlsFromCategory(category.url)
+      let products = []
+      for (const category of categories) {
+        products = await getJCrewProductUrlsFromCategory(category.url)
+        // Add gender to each product
         const gender = category.type === 'men' ? 'male' : 'female'
-        return products.map((product) => ({
+        const productsWithGender = products.map((product) => ({
           ...product,
           gender,
         }))
+        for (const product of productsWithGender) {
+          const cat = categorizeProductByName(product.name)
+          groupedByType[cat].push(product)
+        }
       }
+      // const scrapeCategory = async (category) => {
+      //   const products = await getJCrewProductUrlsFromCategory(category.url)
+      //   const gender = category.type === 'men' ? 'male' : 'female'
+      //   return products.map((product) => ({
+      //     ...product,
+      //     gender,
+      //   }))
+      // }
 
-      const allProductsArrays = await Promise.all(categories.map(scrapeCategory))
-      const allProducts = allProductsArrays.flat()
+      // const allProductsArrays = await Promise.all(categories.map(scrapeCategory))
+      // const allProducts = allProductsArrays.flat()
 
-      for (const product of allProducts) {
-        const cat = categorizeProductByName(product.name)
-        groupedByType[cat].push(product)
-      }
+      // for (const product of allProducts) {
+      //   const cat = categorizeProductByName(product.name)
+      //   groupedByType[cat].push(product)
+      // }
 
       const newProductCollection = await updateOrCreateProductCollection('J_Crew', groupedByType)
       res.status(StatusCodes.OK).json({
@@ -1472,37 +1472,37 @@ export const CONTROLLER_SCRAPER = {
         { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
       ]
 
-      // let products = []
-      // for (const category of categories) {
-      //   products = await getLuluLemonProductUrlsFromCategory(category.url)
-      //   // Add gender to each product
-      //   const gender = category.type === 'men' ? 'male' : 'female'
-      //   const productsWithGender = products.map((product) => ({
-      //     ...product,
-      //     gender,
-      //   }))
-      //   for (const product of productsWithGender) {
-      //     const cat = categorizeProductByName(product.name)
-      //     groupedByType[cat].push(product)
-      //   }
-      // }
-
-      const scrapeCategory = async (category) => {
-        const products = await getLuluLemonProductUrlsFromCategory(category.url)
+      let products = []
+      for (const category of categories) {
+        products = await getLuluLemonProductUrlsFromCategory(category.url)
+        // Add gender to each product
         const gender = category.type === 'men' ? 'male' : 'female'
-        return products.map((product) => ({
+        const productsWithGender = products.map((product) => ({
           ...product,
           gender,
         }))
+        for (const product of productsWithGender) {
+          const cat = categorizeProductByName(product.name)
+          groupedByType[cat].push(product)
+        }
       }
 
-      const allProductsArrays = await Promise.all(categories.map(scrapeCategory))
-      const allProducts = allProductsArrays.flat()
+      // const scrapeCategory = async (category) => {
+      //   const products = await getLuluLemonProductUrlsFromCategory(category.url)
+      //   const gender = category.type === 'men' ? 'male' : 'female'
+      //   return products.map((product) => ({
+      //     ...product,
+      //     gender,
+      //   }))
+      // }
 
-      for (const product of allProducts) {
-        const cat = categorizeProductByName(product.name)
-        groupedByType[cat].push(product)
-      }
+      // const allProductsArrays = await Promise.all(categories.map(scrapeCategory))
+      // const allProducts = allProductsArrays.flat()
+
+      // for (const product of allProducts) {
+      //   const cat = categorizeProductByName(product.name)
+      //   groupedByType[cat].push(product)
+      // }
 
       const newProductCollection = await updateOrCreateProductCollection('Lululemon', groupedByType)
 
