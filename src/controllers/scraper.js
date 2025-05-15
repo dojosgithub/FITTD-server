@@ -58,11 +58,34 @@ let globalBrowser = null
 const getBrowser = async (headlessValue = true) => {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: (await chromium.executablePath) || '/usr/bin/google-chrome',
-      headless: headlessValue,
-      ignoreDefaultArgs: ['--disable-extensions'],
-      defaultViewport: { width: 1920, height: 1080 },
+      headless: true, // Always use headless on Heroku
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--single-process',
+        '--no-zygote',
+        // Memory specific flags
+        '--memory-pressure-off',
+        '--disable-default-apps',
+        '--disable-extensions',
+        '--disable-sync',
+        '--disable-background-networking',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-breakpad',
+        '--disable-client-side-phishing-detection',
+        '--disable-component-extensions-with-background-pages',
+        '--disable-features=TranslateUI,BlinkGenPropertyTrees',
+        '--disable-ipc-flooding-protection',
+        '--disable-renderer-backgrounding',
+        '--mute-audio',
+      ],
+      defaultViewport: {
+        width: 1280,
+        height: 720,
+        deviceScaleFactor: 1,
+      },
     })
   }
   return globalBrowser
