@@ -755,7 +755,7 @@ const fetchJCrewProductDescription = async (url, page) => {
 
 const getJCrewProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   const selector = '.product-tile--info'
-  const page = await setupPage(categoryUrl, selector, existingPage, false)
+  const page = await setupPage(categoryUrl, selector, existingPage)
 
   if (!page) {
     return []
@@ -1255,6 +1255,9 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getEbDenimProducts: asyncMiddleware(async (req, res) => {
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       const categoryUrl = 'https://www.ebdenim.com/collections/all-products' // Example category URL
 
@@ -1267,11 +1270,11 @@ export const CONTROLLER_SCRAPER = {
       const newProductCollection = await updateOrCreateProductCollection('EB_Denim', groupedByType)
 
       // Respond with the scraped products data
-      res.status(StatusCodes.OK).json({
-        data: newProductCollection,
-        // results: products.length,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   data: newProductCollection,
+      //   // results: products.length,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
@@ -1520,6 +1523,9 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getSelfPotraitProducts: asyncMiddleware(async (req, res) => {
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       const categoryUrl = 'https://us.self-portrait.com/collections/all' // Example category URL
 
@@ -1532,11 +1538,11 @@ export const CONTROLLER_SCRAPER = {
       const newProductCollection = await updateOrCreateProductCollection('Self_Potrait', groupedByType)
 
       // Respond with the scraped products data
-      res.status(StatusCodes.OK).json({
-        results: products.length,
-        data: newProductCollection,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   results: products.length,
+      //   data: newProductCollection,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       if (globalBrowser) {
         await globalBrowser.close()
