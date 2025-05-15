@@ -3,7 +3,6 @@ import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-const chromium = require('chrome-aws-lambda')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
@@ -58,7 +57,7 @@ let globalBrowser = null
 const getBrowser = async (headlessValue = true) => {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
-      headless: true, // Always use headless on Heroku
+      headless: headlessValue, // Always use headless on Heroku
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -165,7 +164,7 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null, head
       page = await browser.newPage()
 
       // Set realistic viewport and user agent
-      await page.setViewport({ width: 1280, height: 960 })
+      await page.setViewport({ width: 1280, height: 720 })
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       )
@@ -385,7 +384,7 @@ const fetchEbDenimProductDescription = async (url, page) => {
           document.querySelector('.cc-accordion-item__content') || document.querySelector('.select.original-selector')
         )
       },
-      { timeout: 30000 }
+      { timeout: 60000 }
     )
 
     const getDescription = () => {
