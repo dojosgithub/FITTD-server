@@ -7,7 +7,7 @@ const chromium = require('chrome-aws-lambda')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
-const MAX_CONCURRENCY = 10
+const MAX_CONCURRENCY = 5
 // * Models
 
 import { asyncMiddleware } from '../middlewares'
@@ -81,11 +81,6 @@ const getBrowser = async (headlessValue = true) => {
         '--disable-renderer-backgrounding',
         '--mute-audio',
       ],
-      defaultViewport: {
-        width: 1280,
-        height: 720,
-        deviceScaleFactor: 1,
-      },
     })
   }
   return globalBrowser
@@ -95,7 +90,7 @@ const createPage = async (browser) => {
   const page = await browser.newPage()
 
   // Set realistic viewport and user agent
-  await page.setViewport({ width: 1280, height: 960 })
+  await page.setViewport({ width: 1280, height: 720 })
   await page.setUserAgent(
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
   )
