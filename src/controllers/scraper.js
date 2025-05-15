@@ -2,12 +2,11 @@
 import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
 const puppeteer = require('puppeteer-extra')
-// const chromium = require('chrome-aws-lambda')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
-const MAX_CONCURRENCY = 5
+const MAX_CONCURRENCY = 3
 // * Models
 
 import { asyncMiddleware } from '../middlewares'
@@ -49,6 +48,8 @@ const getBrowser = async (headlessValue) => {
         // Enable necessary features
         '--enable-javascript',
         '--enable-cookies',
+        '--disable-software-rasterizer',
+        '--disable-extensions',
       ],
     })
   }
@@ -937,7 +938,7 @@ const fetchLuluLemonProductDescription = async (url, page) => {
 
 const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   const selector = 'div[data-testid="product-tile"]'
-  const page = await setupPage(categoryUrl, selector, existingPage, false)
+  const page = await setupPage(categoryUrl, selector, existingPage)
 
   if (!page) {
     return []
@@ -1272,6 +1273,9 @@ const extractSelfPortraitProductsFromPage = async (page, baseUrl) => {
 
 export const CONTROLLER_SCRAPER = {
   getSaboSkirtProducts: asyncMiddleware(async (req, res) => {
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       const categoryUrl = 'https://us.saboskirt.com/collections/active-products' // Example category URL
 
@@ -1282,11 +1286,11 @@ export const CONTROLLER_SCRAPER = {
       }
       const newProductCollection = await updateOrCreateProductCollection('Sabo_Skirt', groupedByType)
 
-      res.status(StatusCodes.OK).json({
-        // results: products.length,
-        data: newProductCollection,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   // results: products.length,
+      //   data: newProductCollection,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
@@ -1327,7 +1331,9 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getAgoldeMenAndWomenProducts: asyncMiddleware(async (req, res) => {
-    // Scrape products from Dior (or your specific source)
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       const menUrl = 'https://agolde.com/collections/shop-all-mens/products.json'
       const womenUrl = 'https://agolde.com/collections/shop-all-womens/products.json'
@@ -1357,11 +1363,11 @@ export const CONTROLLER_SCRAPER = {
       console.log(`✅ Successfully fetched ${menProducts.length} men's and ${womenProducts.length} women's products.`)
 
       // Respond with the scraped products data
-      res.status(StatusCodes.OK).json({
-        data: newProductCollection,
-        // results: transformedProducts.length,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   data: newProductCollection,
+      //   // results: transformedProducts.length,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } catch (error) {
       console.error('Error fetching products:', error)
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -1373,7 +1379,9 @@ export const CONTROLLER_SCRAPER = {
 
   getHouseOfCBProducts: asyncMiddleware(async (req, res) => {
     // Scrape products from Dior (or your specific source)
-
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       const categories = [
         { type: 'accessories', url: 'https://app.houseofcb.com/category?category_id=11' },
@@ -1397,11 +1405,11 @@ export const CONTROLLER_SCRAPER = {
       }
       const newProductCollection = await updateOrCreateProductCollection('House_Of_CB', groupedByType)
 
-      res.status(StatusCodes.OK).json({
-        // results: products.length,
-        data: newProductCollection,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   // results: products.length,
+      //   data: newProductCollection,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
@@ -1412,6 +1420,9 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getJCrewProducts: asyncMiddleware(async (req, res) => {
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       // const products = await getHouseOfCbProductUrlsFromCategory(categoryUrl)
       const categories = [
@@ -1451,11 +1462,11 @@ export const CONTROLLER_SCRAPER = {
       // }
 
       const newProductCollection = await updateOrCreateProductCollection('J_Crew', groupedByType)
-      res.status(StatusCodes.OK).json({
-        data: newProductCollection,
-        // results: results.length,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   data: newProductCollection,
+      //   // results: results.length,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
@@ -1466,6 +1477,9 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getLuluLemonProducts: asyncMiddleware(async (req, res) => {
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       const categories = [
         { type: 'men', url: 'https://shop.lululemon.com/c/men-clothes/n1oxc7' },
@@ -1506,11 +1520,11 @@ export const CONTROLLER_SCRAPER = {
 
       const newProductCollection = await updateOrCreateProductCollection('Lululemon', groupedByType)
 
-      res.status(StatusCodes.OK).json({
-        // results: products.length,
-        data: newProductCollection,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   // results: products.length,
+      //   data: newProductCollection,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
@@ -1521,6 +1535,9 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getTheReformationProducts: asyncMiddleware(async (req, res) => {
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       const categories = [
         { type: 'wedding', url: 'https://www.thereformation.com/bridal?page=28' },
@@ -1550,11 +1567,11 @@ export const CONTROLLER_SCRAPER = {
       }
       const newProductCollection = await updateOrCreateProductCollection('Reformation', groupedByType)
 
-      res.status(StatusCodes.OK).json({
-        // results: allProducts.length,
-        data: newProductCollection,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   // results: allProducts.length,
+      //   data: newProductCollection,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
