@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-
+const chromium = require('chrome-aws-lambda')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
@@ -31,25 +31,38 @@ const axios = require('axios')
 const { URL } = require('url')
 let globalBrowser = null
 
-const getBrowser = async (headlessValue) => {
+// const getBrowser = async (headlessValue) => {
+//   if (!globalBrowser) {
+//     globalBrowser = await puppeteer.launch({
+//       // headless: 'new',
+//       headless: headlessValue,
+//       // headless: true,
+//       args: [
+//         '--no-sandbox',
+//         '--disable-setuid-sandbox',
+//         '--disable-dev-shm-usage',
+//         '--disable-accelerated-2d-canvas',
+//         '--disable-gpu',
+//         '--window-size=1920,1080',
+//         // Avoid detection
+//         '--disable-blink-features=AutomationControlled',
+//         // Enable necessary features
+//         '--enable-javascript',
+//         '--enable-cookies',
+//       ],
+//     })
+//   }
+//   return globalBrowser
+// }
+
+const getBrowser = async (headlessValue = true) => {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
-      // headless: 'new',
+      args: chromium.args,
+      executablePath: (await chromium.executablePath) || '/usr/bin/google-chrome',
       headless: headlessValue,
-      // headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920,1080',
-        // Avoid detection
-        '--disable-blink-features=AutomationControlled',
-        // Enable necessary features
-        '--enable-javascript',
-        '--enable-cookies',
-      ],
+      ignoreDefaultArgs: ['--disable-extensions'],
+      defaultViewport: { width: 1920, height: 1080 },
     })
   }
   return globalBrowser
