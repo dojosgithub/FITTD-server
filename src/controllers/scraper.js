@@ -7,7 +7,7 @@ const chromium = require('chrome-aws-lambda')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
-const MAX_CONCURRENCY = 15
+const MAX_CONCURRENCY = 10
 // * Models
 
 import { asyncMiddleware } from '../middlewares'
