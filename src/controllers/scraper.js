@@ -1,9 +1,8 @@
 // * Libraries
 import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
-// const puppeteer = require('puppeteer-extra')
-const puppeteer = require('puppeteer-core')
-const chromium = require('chrome-aws-lambda')
+const puppeteer = require('puppeteer-extra')
+// const chromium = require('chrome-aws-lambda')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
 dotenv.config()
@@ -32,29 +31,29 @@ const axios = require('axios')
 const { URL } = require('url')
 let globalBrowser = null
 
-// const getBrowser = async (headlessValue) => {
-//   if (!globalBrowser) {
-//     globalBrowser = await puppeteer.launch({
-//       // headless: 'new',
-//       headless: headlessValue,
-//       // headless: true,
-//       args: [
-//         '--no-sandbox',
-//         '--disable-setuid-sandbox',
-//         '--disable-dev-shm-usage',
-//         '--disable-accelerated-2d-canvas',
-//         '--disable-gpu',
-//         '--window-size=1920,1080',
-//         // Avoid detection
-//         '--disable-blink-features=AutomationControlled',
-//         // Enable necessary features
-//         '--enable-javascript',
-//         '--enable-cookies',
-//       ],
-//     })
-//   }
-//   return globalBrowser
-// }
+const getBrowser = async (headlessValue) => {
+  if (!globalBrowser) {
+    globalBrowser = await puppeteer.launch({
+      // headless: 'new',
+      headless: headlessValue,
+      // headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-gpu',
+        '--window-size=1920,1080',
+        // Avoid detection
+        '--disable-blink-features=AutomationControlled',
+        // Enable necessary features
+        '--enable-javascript',
+        '--enable-cookies',
+      ],
+    })
+  }
+  return globalBrowser
+}
 
 // const getBrowser = async (headlessValue = true) => {
 //   if (!globalBrowser) {
@@ -87,16 +86,16 @@ let globalBrowser = null
 //   return globalBrowser
 // }
 
-const getBrowser = async () => {
-  if (!globalBrowser) {
-    globalBrowser = await chromium.puppeteer.launch({
-      args: chromium.args,
-      executablePath: (await chromium.executablePath) || '/usr/bin/chromium-browser',
-      headless: chromium.headless,
-    })
-  }
-  return globalBrowser
-}
+// const getBrowser = async () => {
+//   if (!globalBrowser) {
+//     globalBrowser = await chromium.puppeteer.launch({
+//       args: chromium.args,
+//       executablePath: (await chromium.executablePath) || '/usr/bin/chromium-browser',
+//       headless: chromium.headless,
+//     })
+//   }
+//   return globalBrowser
+// }
 
 const createPage = async (browser) => {
   const page = await browser.newPage()
