@@ -1,5 +1,5 @@
 import { asyncMiddleware } from '../middlewares'
-import { TOTP, User, UserMeasurement } from '../models'
+import { TOTP, User, UserMeasurement, UserWishlist } from '../models'
 import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
 import { comparePassword, generateOTToken, generatePassword, generateToken, verifyTOTPToken } from '../utils'
@@ -119,7 +119,7 @@ export const CONTROLLER_AUTH = {
     // const user = await User.findOne({
     //   $or: [{ email }, { mobile }],
     // }).select('+password')
-    const user = await User.findOne({ email }).select('+password')
+    const user = await User.findOne({ email }).select('+password').populate('measurements').populate('wishlist')
 
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({
@@ -151,7 +151,6 @@ export const CONTROLLER_AUTH = {
     const tokens = await generateToken(tokenPayload)
 
     await user.save()
-
     const userObj = user.toObject()
     delete userObj.password
     res.status(StatusCodes.OK).json({
@@ -256,22 +255,28 @@ export const CONTROLLER_AUTH = {
 
   deleteAccount: asyncMiddleware(async (req, res) => {
     const { _id: userId } = req.decoded // Decoded userId from JWT token
-
+    const { password } = req.body
     if (!userId) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'User ID not found' })
     }
 
     // 1. Find the user in the database
-    const user = await User.findById(userId)
+    const user = await User.findById({ userId }).select('+password')
+    console.log('user', user)
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
+    }
+    if (password) {
+      const isAuthenticated = await comparePassword(password, user.password)
+
+      if (!isAuthenticated) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Password does not matched' })
+      }
     }
 
     // 2. Delete associated user measurements (if exists)
     await UserMeasurement.deleteOne({ userId })
-
-    // 3. Optionally, you can delete other related data like user settings, logs, etc.
-    // Example: await UserSettings.deleteOne({ userId })
+    await UserWishlist.deleteMany({ userId })
 
     // 4. Delete the user
     await User.findByIdAndDelete(userId)

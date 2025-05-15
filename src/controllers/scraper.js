@@ -7,32 +7,36 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
-const MAX_CONCURRENCY = 10
+const MAX_CONCURRENCY = 15
 // * Models
 
 import { asyncMiddleware } from '../middlewares'
 import { Product } from '../models'
 import {
-  autoScrollAndClick,
   autoScrollReformationProducts,
-  categorizeProducts,
-  loadAllProducts,
   loadMoreLuluLemonProducts,
   loadMoreSelfPotraitProducts,
+  autoScroll,
+  loadMoreProducts,
+  getAllProducts,
+  normalizeHtml,
+  fetchSecondaryImages,
+  categorizeProductByName,
+  groupedByType,
 } from '../utils'
-import { autoScroll, loadMoreProducts } from '../utils'
-import { getAllProducts } from '../utils'
-import { normalizeHtml } from '../utils'
-import { fetchSecondaryImages } from '../utils'
-import { categorizeProductByName, groupedByType } from '../utils'
 
+import { updateOrCreateProductCollection } from '../services'
+
+const axios = require('axios')
+const { URL } = require('url')
 let globalBrowser = null
 
-const getBrowser = async () => {
+const getBrowser = async (headlessValue) => {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
       // headless: 'new',
-      headless: false,
+      headless: headlessValue,
+      // headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -121,9 +125,9 @@ const createPagePool = async (browser, size = MAX_CONCURRENCY) => {
   return pagePool
 }
 
-const setupPage = async (categoryUrl, waitForSelector, existingPage = null) => {
+const setupPage = async (categoryUrl, waitForSelector, existingPage = null, headless = 'new') => {
   let page = existingPage
-  const browser = await getBrowser()
+  const browser = await getBrowser(headless)
 
   try {
     if (!page) {
@@ -145,11 +149,11 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null) => {
 
     await page.goto(categoryUrl, {
       waitUntil: 'domcontentloaded',
-      timeout: 60000,
+      timeout: 1000000,
     })
 
     if (waitForSelector) {
-      await page.waitForSelector(waitForSelector, { timeout: 60000 })
+      await page.waitForSelector(waitForSelector, { timeout: 1000000 })
     }
 
     return page
@@ -158,6 +162,7 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null) => {
     return null
   }
 }
+
 const scrapeProductsInParallel = async (products, browser, fetchFunction) => {
   // Create a pool of pages to reuse
   const pagePool = await createPagePool(browser)
@@ -215,6 +220,7 @@ const scrapeProductsInParallel = async (products, browser, fetchFunction) => {
 
   return results
 }
+
 const fetchProductDescription = async (url, page) => {
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
@@ -250,6 +256,7 @@ const fetchProductDescription = async (url, page) => {
     return ''
   }
 }
+
 const getProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   const selector = '.grid__item.grid-product'
   const page = await setupPage(categoryUrl, selector, existingPage)
@@ -261,20 +268,19 @@ const getProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   try {
     const products = await extractProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    console.log(`🔄 Fetching descriptions for ${products.length} products...`)
     const productsWithDescriptions = await scrapeProductsInParallel(products, page.browser(), fetchProductDescription)
     console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    // const hasNextPage = await page.evaluate(() => {
-    //   const nextPageLink = document.querySelector('.next a')
-    //   return nextPageLink ? nextPageLink.getAttribute('href') : null
-    // })
+    const hasNextPage = await page.evaluate(() => {
+      const nextPageLink = document.querySelector('.next a')
+      return nextPageLink ? nextPageLink.getAttribute('href') : null
+    })
 
-    // if (hasNextPage) {
-    //   const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
-    //   await new Promise((resolve) => setTimeout(resolve, 3000))
-    //   const nextPageProducts = await getProductUrlsFromCategory(nextPageUrl, page)
-    //   return [...productsWithDescriptions, ...nextPageProducts]
-    // }
+    if (hasNextPage) {
+      const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+      const nextPageProducts = await getProductUrlsFromCategory(nextPageUrl, page)
+      return [...productsWithDescriptions, ...nextPageProducts]
+    }
 
     return productsWithDescriptions
   } catch (error) {
@@ -282,6 +288,7 @@ const getProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
     return []
   }
 }
+
 const extractProductsFromPage = async (page, baseUrl) => {
   return await page.evaluate((baseUrl) => {
     const products = []
@@ -304,7 +311,7 @@ const extractProductsFromPage = async (page, baseUrl) => {
 
       // Extract product data
       const product = {
-        id: element.getAttribute('data-productid'),
+        // id: element.getAttribute('data-productid'),
         url: element.querySelector('a.grid-product__link')?.getAttribute('href'),
         name: element.querySelector('.grid-product__title')?.textContent.trim(),
         gender: 'female',
@@ -327,11 +334,9 @@ const extractProductsFromPage = async (page, baseUrl) => {
         })
       })
 
-      if (product.url) {
-        // Make sure URL is absolute
-        product.url = new URL(product.url, baseUrl).toString()
-        products.push(product)
-      }
+      //   // Make sure URL is absolute
+      product.url = new URL(product.url, baseUrl).toString()
+      products.push(product)
     })
 
     return products
@@ -370,7 +375,7 @@ const fetchEbDenimProductDescription = async (url, page) => {
       return sizeOptions
     })
 
-    let description = await page.evaluate(getDescription)
+    let description = normalizeHtml(await page.evaluate(getDescription))
 
     return { description, sizes } || ''
   } catch (err) {
@@ -387,11 +392,9 @@ const getEbDenimProductUrlsFromCategory = async (categoryUrl, existingPage = nul
     return []
   }
   try {
-    // await autoScroll(page)
-
+    await autoScroll(page)
     const products = await extractEbDenimProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    console.log(`🔄 Fetching descriptions for ${products.length} products...`)
     const productsWithDescriptions = await scrapeProductsInParallel(
       products,
       page.browser(),
@@ -405,7 +408,6 @@ const getEbDenimProductUrlsFromCategory = async (categoryUrl, existingPage = nul
   }
 }
 
-// Your controller function that uses asyncMiddleware
 const extractEbDenimProductsFromPage = async (page, baseUrl) => {
   return await page.evaluate((baseUrl) => {
     const products = []
@@ -430,58 +432,57 @@ const extractEbDenimProductsFromPage = async (page, baseUrl) => {
           reviewCount: null,
         }
 
-        if (product.url) {
-          // Find the primary image - try multiple approaches to be more robust
-          const primaryImageContainer = block.querySelector('.product-block__image--primary')
+        // Find the primary image - try multiple approaches to be more robust
+        const primaryImageContainer = block.querySelector('.product-block__image--primary')
 
-          if (primaryImageContainer) {
-            // First try to get the img element with class rimage__image
-            let primaryImageElement = primaryImageContainer.querySelector('img.rimage__image')
+        if (primaryImageContainer) {
+          // First try to get the img element with class rimage__image
+          let primaryImageElement = primaryImageContainer.querySelector('img.rimage__image')
 
-            if (primaryImageElement) {
-              // Try srcset first (already loaded images)
-              let srcset = primaryImageElement.getAttribute('srcset') || primaryImageElement.getAttribute('data-src')
+          if (primaryImageElement) {
+            // Try srcset first (already loaded images)
+            let srcset = primaryImageElement.getAttribute('srcset') || primaryImageElement.getAttribute('data-src')
 
-              // If we have a srcset, parse it to get the highest resolution image
-              if (srcset) {
-                const srcsetParts = srcset.split(',')
-                // Get the URL with the highest resolution (usually the last one)
-                let highestResUrl = srcsetParts[srcsetParts.length - 1].trim().split(' ')[0] // Get just the URL part
+            // If we have a srcset, parse it to get the highest resolution image
+            if (srcset) {
+              const srcsetParts = srcset.split(',')
+              // Get the URL with the highest resolution (usually the last one)
+              let highestResUrl = srcsetParts[srcsetParts.length - 1].trim().split(' ')[0] // Get just the URL part
 
-                if (highestResUrl) {
-                  // Add https: if the URL starts with //
-                  if (highestResUrl.startsWith('//')) {
-                    highestResUrl = 'https:' + highestResUrl
-                  }
-
-                  highestResUrl = highestResUrl.replace(/(_\d+x|_{width}x)/, '')
-
-                  product.image.primary = highestResUrl
+              if (highestResUrl) {
+                // Add https: if the URL starts with //
+                if (highestResUrl.startsWith('//')) {
+                  highestResUrl = 'https:' + highestResUrl
                 }
+
+                highestResUrl = highestResUrl.replace(/(_\d+x|_{width}x)/, '')
+
+                product.image.primary = highestResUrl
               }
             }
           }
-          const secondaryImageContainers = block.querySelectorAll('.product-block__image--secondary .rimage-background')
-
-          secondaryImageContainers.forEach((bgDiv) => {
-            let bgUrl = bgDiv.getAttribute('data-lazy-bgset-src')
-            if (bgUrl) {
-              if (bgUrl.startsWith('//')) {
-                bgUrl = 'https:' + bgUrl
-              }
-
-              bgUrl = bgUrl.replace(/(_\d+x|_{width}x)/, '') // Clean the URL
-              product.image.secondary.push(bgUrl)
-            }
-          })
-          products.push(product)
         }
+        const secondaryImageContainers = block.querySelectorAll('.product-block__image--secondary .rimage-background')
+
+        secondaryImageContainers.forEach((bgDiv) => {
+          let bgUrl = bgDiv.getAttribute('data-lazy-bgset-src')
+          if (bgUrl) {
+            if (bgUrl.startsWith('//')) {
+              bgUrl = 'https:' + bgUrl
+            }
+
+            bgUrl = bgUrl.replace(/(_\d+x|_{width}x)/, '') // Clean the URL
+            product.image.secondary.push(bgUrl)
+          }
+        })
+        products.push(product)
       }
     })
 
     return products
   }, baseUrl)
 }
+
 const transformProducts = (products) => {
   return products.map((product) => {
     const images = product.images || []
@@ -507,6 +508,7 @@ const transformProducts = (products) => {
     }
   })
 }
+
 const fetchHouseOfCBProductDescription = async (url, page) => {
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
@@ -600,22 +602,22 @@ const getHouseOfCbProductUrlsFromCategory = async (categoryUrl, existingPage = n
     return []
   }
   try {
-    // await loadMoreProducts(page)
+    await loadMoreProducts(page)
     const products = await extractHouseOfCBProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    console.log(`🔄 Fetching descriptions for ${products.length} products...`)
-    // const productsWithDescriptions = await scrapeProductsInParallel(
-    //   products,
-    //   page.browser(),
-    //   fetchHouseOfCBProductDescription
-    // )
-    // console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    return products
+    const productsWithDescriptions = await scrapeProductsInParallel(
+      products,
+      page.browser(),
+      fetchHouseOfCBProductDescription
+    )
+    console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
+    return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
     return []
   }
 }
+
 const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
   return await page.evaluate((baseUrl) => {
     const products = []
@@ -664,81 +666,161 @@ const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
   }, baseUrl)
 }
 
+const fetchJCrewProductDescription = async (url, page) => {
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+
+    // 1️⃣ Extract productId from URL
+    const parsedUrl = new URL(url)
+    const finalProductId = parsedUrl.searchParams.get('colorProductCode')
+
+    // 2️⃣ Get description, images, and colorCode from meta tag
+    const { description, image, colorCode } = await page.evaluate(() => {
+      const descEl = document.querySelector('[data-qaid="pdpProductDescriptionRomance"]')
+      const description = descEl ? descEl.innerText.trim() : ''
+
+      const metaImage = document.querySelector('meta[property="og:image"]')
+      let colorCode = ''
+      if (metaImage) {
+        const content = metaImage.getAttribute('content')
+        const match = content?.match(/_(\w+)\?\$/) // Extracts WX4098
+        colorCode = match ? match[1] : ''
+      }
+
+      const imageUrls = Array.from(document.querySelectorAll('figure.RevampedZoomImage__container___vCNGc'))
+        .map((fig) => fig.getAttribute('data-img'))
+        .filter(Boolean)
+
+      const primary = imageUrls.length > 0 ? imageUrls[0] : ''
+      const secondary = imageUrls.length > 1 ? imageUrls.slice(1) : []
+
+      return {
+        description,
+        image: {
+          primary,
+          secondary,
+        },
+        colorCode,
+      }
+    })
+    // 3️⃣ Fetch variant data via API
+    let sizes = []
+    if (finalProductId && colorCode) {
+      const variantApiUrl = `https://www.jcrew.com/browse/products/${finalProductId}?expand=availability%2Cvariations%2Cprices%2Cset_products`
+      const variantRes = await axios.get(variantApiUrl)
+      const variants = variantRes?.data?.variants || []
+
+      sizes = variants
+        .filter((variant) => variant.variation_values?.color === colorCode.toString())
+        .map((variant) => ({
+          size: `${variant.variation_values.size}#${variant.variation_values.productSizingName}`,
+          inStock: variant.orderable,
+        }))
+    }
+
+    // 4️⃣ Optional: Fetch review data
+    let rating = null
+    let reviewCount = null
+    if (finalProductId) {
+      const reviewApiUrl = `https://api.bazaarvoice.com/data/reviews.json?apiversion=5.4&stats=Reviews&Include=Products&displaycode=1706-en_us&passkey=caJpG5rYXbVOctCfag3gPCp2AQlVjvBqzWi3pUGVUsEm8&filter=productid:eq:${finalProductId}&limit=6&Sort=submissiontime:desc`
+      const response = await axios.get(reviewApiUrl)
+      const reviewData = response.data
+
+      const productStats = reviewData?.Includes?.Products?.[finalProductId]?.ReviewStatistics
+      rating = productStats?.AverageOverallRating ? Math.round(productStats.AverageOverallRating * 10) / 10 : null
+      reviewCount = reviewData?.TotalResults || null
+    }
+
+    return {
+      description,
+      image,
+      rating,
+      reviewCount,
+      sizes,
+    }
+  } catch (err) {
+    console.error(`❌ Failed to fetch product data: ${err.message}`)
+    return {
+      description: '',
+      image: {
+        primary: '',
+        secondary: [],
+      },
+      rating: null,
+      reviewCount: null,
+      sizes: [],
+    }
+  }
+}
+
 const getJCrewProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   const selector = '.product-tile--info'
-  const page = await setupPage(categoryUrl, selector, existingPage)
+  const page = await setupPage(categoryUrl, selector, existingPage, false)
 
   if (!page) {
     return []
   }
+  page.on('console', (msg) => {
+    if (msg.type() === 'log') {
+      console.log(`🧠 BROWSER LOG: ${msg.text()}`)
+    }
+  })
   try {
-    // await loadMoreProducts(page)
     const products = await extractJCrewProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    console.log(`🔄 Fetching descriptions for ${products.length} products...`)
-    // const productsWithDescriptions = await fetchProductDescription(
-    //   products,
-    //   page.browser(),
-    //   fetchEbDenimProductDescription
-    // )
-    // console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    return products
+    const productsWithDescriptions = await scrapeProductsInParallel(
+      products,
+      page.browser(),
+      fetchJCrewProductDescription
+    )
+
+    console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
+    const hasNextPage = await page.evaluate(() => {
+      const nextPageLink = document.querySelector('.ArrayPagination__next___lrjgC')
+      return nextPageLink ? nextPageLink.getAttribute('to') : null
+    })
+
+    if (hasNextPage) {
+      const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+      const nextPageProducts = await getJCrewProductUrlsFromCategory(nextPageUrl, page)
+      return [...productsWithDescriptions, ...nextPageProducts]
+    }
+    return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
     return []
   }
 }
+
 const extractJCrewProductsFromPage = async (page, baseUrl) => {
   return await page.evaluate((baseUrl) => {
     const products = []
 
-    document.querySelectorAll('[data-qaid^="arrProductListItem"]').forEach((block) => {
+    document.querySelectorAll('[data-testid="product-tile"]').forEach((block) => {
       const titleElement = block.querySelector('h2.ProductDescription__name___HqeEd')
       const linkElement = block.querySelector('a.ProductDetails__link___8Bf30')
-      const imgTag = block.querySelector('.image-wrapper img')
-      const ratingContainer = block.querySelector('[data-testid="ratings"]')
-      const reviewCountElement = block.querySelector('.ProductReviews__review-text____9dKI')
 
-      if (titleElement && linkElement && imgTag) {
+      if (titleElement && linkElement) {
         const relativeUrl = linkElement.getAttribute('href')
         const absoluteUrl = new URL(relativeUrl, baseUrl).toString()
-
-        const fullImgSrc = imgTag.getAttribute('src') || ''
-        const imgUrlBase = fullImgSrc.split('?')[0] // Strip query params
-
         // Extract rating
-        let rating = null
-        const ratingLabel = ratingContainer?.getAttribute('aria-label')
-        if (ratingLabel) {
-          const match = ratingLabel.match(/([\d.]+)\s+out of 5/)
-          if (match) {
-            rating = parseFloat(match[1])
-          }
-        }
-
-        // Extract review count
-        let reviewCount = null
-        const reviewText = reviewCountElement?.textContent.trim()
-        if (reviewText) {
-          const countMatch = reviewText.match(/\d+/)
-          if (countMatch) {
-            reviewCount = parseInt(countMatch[0], 10)
-          }
-        }
-
+        const wasPrice = block.querySelector('[data-testid="strikethrough"]')?.textContent.trim()
+        const nowPrice = block.querySelector('.is-price')?.textContent.trim().replace('Sale Price: ', '')
+        const price = nowPrice || wasPrice || ''
         const product = {
           name: titleElement.textContent.trim(),
           description: '',
           gender: 'female',
           url: absoluteUrl,
-          price: '', // still waiting on price selector
+          price,
           image: {
-            primary: imgUrlBase,
+            primary: '',
             secondary: [],
           },
           sizes: [], // still waiting on size selector
-          rating,
-          reviewCount,
+          rating: null,
+          reviewCount: null,
         }
 
         products.push(product)
@@ -755,36 +837,42 @@ const fetchLuluLemonProductDescription = async (url, page) => {
 
     await page.waitForFunction(
       () => {
-        return document.querySelector('.pdp-components-wrapper') // Wait for the first div with the description
+        return document.querySelector('[data-lll-pl="size-tile"]') // Wait for the first div with the description
       },
-      { timeout: 30000 }
+      { timeout: 60000 }
     )
 
-    const [primaryImageUrl, sizes, description, reviewCount] = await Promise.all([
+    const [primaryImageUrl, sizes, description, reviewCount, rating] = await Promise.all([
       page.evaluate(() => {
         const preloadLink = document.querySelector('link[rel="preload"][as="image"]')
         return preloadLink?.href || null
       }),
 
       page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.sizeTile-3i47L')).map((el) => {
-          const size = el.textContent.trim().replace(/\s*\(.*\)/, '')
-          const inStock = !el.className.includes('sizeTileDisabled')
+        return Array.from(document.querySelectorAll('[data-lll-pl="size-tile"]')).map((el) => {
+          const size = el.textContent.trim()
+          const inStock = !el.className.includes('size-tile_sizeTileUnavailable')
           return { size, inStock }
         })
       }),
 
       page.evaluate(() => {
-        return Array.from(document.querySelectorAll('button[data-testid="designed-for-button"]')).map((button) =>
-          button.textContent.trim()
-        )
+        return Array.from(document.querySelectorAll('button[data-testid="designed-for-button"]'))
+          .map((el) => `<li>${el.innerHTML.trim()}</li>`)
+          .join('')
       }),
 
       page.evaluate(() => {
-        const countText = document.querySelector('.reviews-link_reviewsLinkCount__FUZlT')?.textContent
-        if (!countText) return 0
-        const match = countText.replace(/[()]/g, '').match(/\d+/) // Remove parentheses before matching
+        const el = document.querySelector('.reviews-link_reviewsLinkCount__Ok1LX')
+        const countText = el.textContent.trim()
+        const match = countText.match(/\d+/) // Match first number (parentheses are irrelevant here)
         return match ? parseInt(match[0], 10) : 0
+      }),
+
+      page.evaluate(() => {
+        const ldJson = document.querySelector('script[type="application/ld+json"]')
+        const data = JSON.parse(ldJson.textContent)
+        return data.aggregateRating?.ratingValue ? Math.round(data.aggregateRating?.ratingValue * 10) / 10 : null
       }),
     ])
 
@@ -797,6 +885,7 @@ const fetchLuluLemonProductDescription = async (url, page) => {
         secondary: secondaryImageUrls,
       },
       reviewCount,
+      rating,
     }
   } catch (err) {
     console.error(`❌ Failed to fetch description from ${url}: ${err.message}`)
@@ -805,8 +894,8 @@ const fetchLuluLemonProductDescription = async (url, page) => {
 }
 
 const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
-  const selector = 'div.product-list_productListItem__uA9Id[data-testid="product-tile"]'
-  const page = await setupPage(categoryUrl, selector, existingPage)
+  const selector = 'div[data-testid="product-tile"]'
+  const page = await setupPage(categoryUrl, selector, existingPage, false)
 
   if (!page) {
     return []
@@ -817,27 +906,27 @@ const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = n
     }
   })
   try {
-    await loadMoreLuluLemonProducts(page)
+    await loadMoreLuluLemonProducts(page, selector, categoryUrl)
     const products = await extractLuluLemonProductsFromPage(page, categoryUrl)
-    // console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    // console.log(`🔄 Fetching descriptions for ${products.length} products...`)
-    // const productsWithDescriptions = await scrapeProductsInParallel(
-    //   products,
-    //   page.browser(),
-    //   fetchLuluLemonProductDescription
-    // )
-    // console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    return products
+    console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
+    const productsWithDescriptions = await scrapeProductsInParallel(
+      products,
+      page.browser(),
+      fetchLuluLemonProductDescription
+    )
+    console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
+    return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
     return []
   }
 }
+
 const extractLuluLemonProductsFromPage = async (page, baseUrl) => {
   return await page.evaluate((baseUrl) => {
     const products = []
 
-    document.querySelectorAll('.product-list_productListItem__uA9Id').forEach((productTile) => {
+    document.querySelectorAll('div[data-testid="product-tile"]').forEach((productTile) => {
       const titleAnchor = productTile.querySelector('h3.product-tile__product-name a')
       const priceElement = productTile.querySelector('.price span')
 
@@ -851,16 +940,16 @@ const extractLuluLemonProductsFromPage = async (page, baseUrl) => {
 
         products.push({
           name: title,
-          // description: '',
-          // url: absoluteUrl,
-          // price,
-          // image: {
-          //   primary: '',
-          //   secondary: [],
-          // },
-          // sizes: [],
-          // rating: null,
-          // reviewCount: null,
+          description: '',
+          url: absoluteUrl,
+          price,
+          image: {
+            primary: '',
+            secondary: [],
+          },
+          sizes: [],
+          rating: null,
+          reviewCount: null,
         })
       }
     })
@@ -974,24 +1063,21 @@ const getTheReformationProductUrlsFromCategory = async (categoryUrl, existingPag
     }
   })
   try {
-    await autoScrollReformationProducts(page, '.product-grid__item')
+    // await autoScrollReformationProducts(page)
     const products = await extractTheReformationProductsFromPage(page, categoryUrl)
-    console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    // console.log(`🔄 Fetching descriptions for ${products.length} products...`)
-    // const productsWithDescriptions = await scrapeProductsInParallel(
-    //   products,
-    //   page.browser(),
-    //   fetchTheReformationProductDescription
-    // )
-    // console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    return products
+    const productsWithDescriptions = await scrapeProductsInParallel(
+      products,
+      page.browser(),
+      fetchTheReformationProductDescription
+    )
+    console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
+    return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
     return []
   }
 }
 
-// Your controller function that uses asyncMiddleware
 const extractTheReformationProductsFromPage = async (page, baseUrl) => {
   return await page.evaluate((baseUrl) => {
     const products = []
@@ -1001,14 +1087,6 @@ const extractTheReformationProductsFromPage = async (page, baseUrl) => {
       const titleElement = productEl.querySelector('.product-tile__body-section.product-tile__name')
       const priceElement = productEl.querySelector('.price--reduced')
       const linkElement = productEl.querySelector('.product-tile__anchor')
-      // const imageEl = productEl.querySelector('img.tile-image-primary')
-      // let primaryImage = null
-
-      // if (imageEl) {
-      //   const src = imageEl.getAttribute('src')
-      //   // Remove the width part, e.g. /w_600/
-      //   primaryImage = src.replace(/\/w_\d+\//, '/')
-      // }
 
       const name = titleElement?.textContent.trim() || ''
       const price = priceElement?.textContent.trim() || ''
@@ -1089,8 +1167,6 @@ const getSelfPotraitProductUrlsFromCategory = async (categoryUrl, existingPage =
   try {
     await loadMoreSelfPotraitProducts(page, '.prd-List_Item', '.pgn-LoadMore_Button')
     const products = await extractSelfPortraitProductsFromPage(page, categoryUrl)
-    console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
-    console.log(`🔄 Fetching descriptions for ${products.length} products...`)
     const productsWithDescriptions = await scrapeProductsInParallel(
       products,
       page.browser(),
@@ -1154,27 +1230,19 @@ const extractSelfPortraitProductsFromPage = async (page, baseUrl) => {
 
 export const CONTROLLER_SCRAPER = {
   getSaboSkirtProducts: asyncMiddleware(async (req, res) => {
-    // Scrape products from Dior (or your specific source)
     try {
       const categoryUrl = 'https://us.saboskirt.com/collections/active-products' // Example category URL
-      // const categoryUrl = 'https://us.saboskirt.com/collections/dresses/mini-dresses' // Example category URL
 
       const products = await getProductUrlsFromCategory(categoryUrl)
-      const categorizedProducts = await categorizeProducts(products)
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
-      // }
-      console.log(
-        `🏁 Scraping completed. Found ${products.length} products across ${
-          Object.keys(categorizedProducts).length
-        } categories.`
-      )
-      // Respond with the scraped products data
+      for (const product of products) {
+        const cat = categorizeProductByName(product.name)
+        groupedByType[cat].push(product)
+      }
+      const newProductCollection = await updateOrCreateProductCollection('Sabo_Skirt', groupedByType)
+
       res.status(StatusCodes.OK).json({
-        data: categorizedProducts,
-        results: products.length,
+        // results: products.length,
+        data: newProductCollection,
         message: 'Products Fetched and Saved successfully',
       })
     } finally {
@@ -1184,28 +1252,24 @@ export const CONTROLLER_SCRAPER = {
         globalBrowser = null
       }
     }
-  }),
+  }), //Categorization Done
+
   getEbDenimProducts: asyncMiddleware(async (req, res) => {
-    // Scrape products from Dior (or your specific source)
     try {
       const categoryUrl = 'https://www.ebdenim.com/collections/all-products' // Example category URL
 
       const products = await getEbDenimProductUrlsFromCategory(categoryUrl)
-      // const categorizedProducts = await categorizeProducts(products)
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
-      // }
-      // console.log(
-      //   `🏁 Scraping completed. Found ${products.length} products across ${
-      //     Object.keys(categorizedProducts).length
-      //   } categories.`
-      // )
+      for (const product of products) {
+        const cat = categorizeProductByName(product.name, true)
+        groupedByType[cat].push(product)
+      }
+
+      const newProductCollection = await updateOrCreateProductCollection('EB_Denim', groupedByType)
+
       // Respond with the scraped products data
       res.status(StatusCodes.OK).json({
-        data: products,
-        results: products.length,
+        data: newProductCollection,
+        // results: products.length,
         message: 'Products Fetched and Saved successfully',
       })
     } finally {
@@ -1215,7 +1279,8 @@ export const CONTROLLER_SCRAPER = {
         globalBrowser = null
       }
     }
-  }),
+  }), //Categorization Done
+
   getAgoldeMenAndWomenProducts: asyncMiddleware(async (req, res) => {
     // Scrape products from Dior (or your specific source)
     try {
@@ -1241,17 +1306,14 @@ export const CONTROLLER_SCRAPER = {
         const cat = categorizeProductByName(product.name)
         groupedByType[cat].push(product)
       }
-      // const categorizedProducts = await categorizeProducts(products)
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
-      // }
+
+      const newProductCollection = await updateOrCreateProductCollection('Agolde', groupedByType)
+
       console.log(`✅ Successfully fetched ${menProducts.length} men's and ${womenProducts.length} women's products.`)
 
       // Respond with the scraped products data
       res.status(StatusCodes.OK).json({
-        data: groupedByType,
+        data: newProductCollection,
         // results: transformedProducts.length,
         message: 'Products Fetched and Saved successfully',
       })
@@ -1262,7 +1324,8 @@ export const CONTROLLER_SCRAPER = {
         error: error.message,
       })
     }
-  }),
+  }), //Categorization Done
+
   getHouseOfCBProducts: asyncMiddleware(async (req, res) => {
     // Scrape products from Dior (or your specific source)
 
@@ -1287,21 +1350,11 @@ export const CONTROLLER_SCRAPER = {
           groupedByType[cat].push(product)
         }
       }
-      // const categorizedProducts = await categorizeProducts(products)
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
-      // }
-      // console.log(
-      //   `🏁 Scraping completed. Found ${products.length} products across ${
-      //     Object.keys(categorizedProducts).length
-      //   } categories.`
-      // )
-      // Respond with the scraped products data
+      const newProductCollection = await updateOrCreateProductCollection('House_Of_CB', groupedByType)
+
       res.status(StatusCodes.OK).json({
         // results: products.length,
-        data: groupedByType,
+        data: newProductCollection,
         message: 'Products Fetched and Saved successfully',
       })
     } finally {
@@ -1311,96 +1364,51 @@ export const CONTROLLER_SCRAPER = {
         globalBrowser = null
       }
     }
-  }),
+  }), //Categorization Done
+
   getJCrewProducts: asyncMiddleware(async (req, res) => {
     try {
       // const products = await getHouseOfCbProductUrlsFromCategory(categoryUrl)
       const categories = [
-        { type: 'men', url: 'https://www.jcrew.com/plp/mens' },
-        // { type: 'women', url: 'https://www.jcrew.com/plp/womens' },
+        { type: 'men', url: 'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=9' },
+        { type: 'women', url: 'https://www.jcrew.com/plp/womens?Npge=1&Nrpp=9' },
       ]
 
-      const results = []
-
-      for (const category of categories) {
-        const products = await getJCrewProductUrlsFromCategory(category.url)
-        results.push(products)
-      }
-
-      // Optionally group by type if needed:
-      const groupedByType = results.reduce((acc, curr) => {
-        acc[curr.type] = acc[curr.type] || []
-        acc[curr.type].push(curr)
-        return acc
-      }, {})
-      // const categorizedProducts = await categorizeProducts(products)
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
+      // let products = []
+      // for (const category of categories) {
+      //   products = await getJCrewProductUrlsFromCategory(category.url)
+      //   // Add gender to each product
+      //   const gender = category.type === 'men' ? 'male' : 'female'
+      //   const productsWithGender = products.map((product) => ({
+      //     ...product,
+      //     gender,
+      //   }))
+      //   for (const product of productsWithGender) {
+      //     const cat = categorizeProductByName(product.name)
+      //     groupedByType[cat].push(product)
+      //   }
       // }
-      // console.log(
-      //   `🏁 Scraping completed. Found ${products.length} products across ${
-      //     Object.keys(categorizedProducts).length
-      //   } categories.`
-      // )
-      // Respond with the scraped products data
-      res.status(StatusCodes.OK).json({
-        data: groupedByType,
-        results: results.length,
-        message: 'Products Fetched and Saved successfully',
-      })
-    } finally {
-      // Clean up the browser instance
-      if (globalBrowser) {
-        await globalBrowser.close()
-        globalBrowser = null
-      }
-    }
-  }),
-  getLuluLemonProducts: asyncMiddleware(async (req, res) => {
-    try {
-      const categories = [
-        {
-          type: 'men',
-          url: 'https://shop.lululemon.com/c/men-clothes/n1oxc7',
-        },
-        // { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
-      ]
-
-      let products = []
-      for (const category of categories) {
-        products = await getLuluLemonProductUrlsFromCategory(category.url)
-        // Add gender to each product
+      const scrapeCategory = async (category) => {
+        const products = await getJCrewProductUrlsFromCategory(category.url)
         const gender = category.type === 'men' ? 'male' : 'female'
-        const productsWithGender = products.map((product) => ({
+        return products.map((product) => ({
           ...product,
           gender,
         }))
-        for (const product of productsWithGender) {
-          const cat = categorizeProductByName(product.name)
-          groupedByType[cat].push(product)
-        }
-        // if (!groupedByType[category.type]) {
-        //   groupedByType[category.type] = []
-        // }
-        // groupedByType[category.type].push(...productsWithGender)
       }
-      // const categorizedProducts = await categorizeProducts(products)
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
-      // }
-      // console.log(
-      //   `🏁 Scraping completed. Found ${products.length} products across ${
-      //     Object.keys(categorizedProducts).length
-      //   } categories.`
-      // )
-      // Respond with the scraped products data
+
+      const allProductsArrays = await Promise.all(categories.map(scrapeCategory))
+      const allProducts = allProductsArrays.flat()
+
+      for (const product of allProducts) {
+        const cat = categorizeProductByName(product.name)
+        groupedByType[cat].push(product)
+      }
+
+      const newProductCollection = await updateOrCreateProductCollection('J_Crew', groupedByType)
       res.status(StatusCodes.OK).json({
-        // results: products.length,
-        data: groupedByType,
+        data: newProductCollection,
+        // results: results.length,
         message: 'Products Fetched and Saved successfully',
       })
     } finally {
@@ -1410,46 +1418,96 @@ export const CONTROLLER_SCRAPER = {
         globalBrowser = null
       }
     }
-  }),
-  getTheReformationProducts: asyncMiddleware(async (req, res) => {
-    // Scrape products from Dior (or your specific source)
+  }), //Categorization Done
+
+  getLuluLemonProducts: asyncMiddleware(async (req, res) => {
     try {
-      // const categoryUrl = 'https://www.thereformation.com/search?cgid=all-products' // Example category URL
       const categories = [
-        { type: 'wedding', url: 'https://www.thereformation.com/bridal' },
-        { type: 'shoes', url: 'https://www.thereformation.com/shoes' },
-        { type: 'bags', url: 'https://www.thereformation.com/bags' },
-        { type: 'clothes', url: 'https://www.thereformation.com/clothing' },
+        { type: 'men', url: 'https://shop.lululemon.com/c/men-clothes/n1oxc7' },
+        { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
       ]
 
-      const groupedByType = {}
-      let allProducts = [] // Collect all products here
+      // let products = []
+      // for (const category of categories) {
+      //   products = await getLuluLemonProductUrlsFromCategory(category.url)
+      //   // Add gender to each product
+      //   const gender = category.type === 'men' ? 'male' : 'female'
+      //   const productsWithGender = products.map((product) => ({
+      //     ...product,
+      //     gender,
+      //   }))
+      //   for (const product of productsWithGender) {
+      //     const cat = categorizeProductByName(product.name)
+      //     groupedByType[cat].push(product)
+      //   }
+      // }
+
+      const scrapeCategory = async (category) => {
+        const products = await getLuluLemonProductUrlsFromCategory(category.url)
+        const gender = category.type === 'men' ? 'male' : 'female'
+        return products.map((product) => ({
+          ...product,
+          gender,
+        }))
+      }
+
+      const allProductsArrays = await Promise.all(categories.map(scrapeCategory))
+      const allProducts = allProductsArrays.flat()
+
+      for (const product of allProducts) {
+        const cat = categorizeProductByName(product.name)
+        groupedByType[cat].push(product)
+      }
+
+      const newProductCollection = await updateOrCreateProductCollection('Lululemon', groupedByType)
+
+      res.status(StatusCodes.OK).json({
+        // results: products.length,
+        data: newProductCollection,
+        message: 'Products Fetched and Saved successfully',
+      })
+    } finally {
+      // Clean up the browser instance
+      if (globalBrowser) {
+        await globalBrowser.close()
+        globalBrowser = null
+      }
+    }
+  }), //Categorization Done
+
+  getTheReformationProducts: asyncMiddleware(async (req, res) => {
+    try {
+      const categories = [
+        { type: 'wedding', url: 'https://www.thereformation.com/bridal?page=28' },
+        { type: 'shoes', url: 'https://www.thereformation.com/shoes?page=29' },
+        { type: 'bags', url: 'https://www.thereformation.com/bags?page=7' },
+        { type: 'clothes', url: 'https://www.thereformation.com/clothing?page=203' },
+      ]
 
       for (const category of categories) {
         const products = await getTheReformationProductUrlsFromCategory(category.url)
 
-        if (!groupedByType[category.type]) {
-          groupedByType[category.type] = []
+        for (const product of products) {
+          let cat
+
+          if (category.type === 'shoes') {
+            cat = 'footwear'
+          } else if (category.type === 'bags') {
+            cat = 'accessories'
+          } else if (category.type === 'wedding') {
+            cat = 'dresses'
+          } else {
+            cat = categorizeProductByName(product.name)
+          }
+
+          groupedByType[cat].push(product)
         }
-
-        groupedByType[category.type].push(...products)
-        allProducts.push(...products) // Accumulate into total
       }
+      const newProductCollection = await updateOrCreateProductCollection('Reformation', groupedByType)
 
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
-      // }
-      // console.log(
-      //   `🏁 Scraping completed. Found ${products.length} products across ${
-      //     Object.keys(categorizedProducts).length
-      //   } categories.`
-      // )
-      // Respond with the scraped products data
       res.status(StatusCodes.OK).json({
-        results: allProducts.length,
-        data: groupedByType,
+        // results: allProducts.length,
+        data: newProductCollection,
         message: 'Products Fetched and Saved successfully',
       })
     } finally {
@@ -1459,88 +1517,31 @@ export const CONTROLLER_SCRAPER = {
         globalBrowser = null
       }
     }
-  }),
+  }), //Categorization Done
+
   getSelfPotraitProducts: asyncMiddleware(async (req, res) => {
-    // Scrape products from Dior (or your specific source)
     try {
       const categoryUrl = 'https://us.self-portrait.com/collections/all' // Example category URL
 
       const products = await getSelfPotraitProductUrlsFromCategory(categoryUrl)
-      // const categorizedProducts = await categorizeProducts(products)
-      // // Save products to DB
-      // for (const product of products) {
-      //   const newProduct = new Product(product)
-      //   await newProduct.save()
-      // }
-      // console.log(
-      //   `🏁 Scraping completed. Found ${products.length} products across ${
-      //     Object.keys(categorizedProducts).length
-      //   } categories.`
-      // )
+
+      for (const product of products) {
+        const cat = categorizeProductByName(product.name)
+        groupedByType[cat].push(product)
+      }
+      const newProductCollection = await updateOrCreateProductCollection('Self_Potrait', groupedByType)
+
       // Respond with the scraped products data
       res.status(StatusCodes.OK).json({
-        data: products,
         results: products.length,
+        data: newProductCollection,
         message: 'Products Fetched and Saved successfully',
       })
     } finally {
-      // Clean up the browser instance
       if (globalBrowser) {
         await globalBrowser.close()
         globalBrowser = null
       }
     }
-  }),
+  }), //Categorization Done
 }
-
-// Testing For 1 Product
-
-// const extractProductsFromPage = async (page, baseUrl) => {
-//   return await page.evaluate((baseUrl) => {
-//     const products = []
-//     const firstElement = document.querySelector('.grid__item.grid-product')
-//     const rawPrimary = firstElement.querySelector('.grid-product__image')?.getAttribute('data-src') || ''
-//     const rawSecondary = firstElement.querySelector('.grid-product__secondary-image')?.getAttribute('data-bgset') || ''
-
-//     // Format primary image (replace {width} and strip leading slashes)
-//     const primary = 'https://' + rawPrimary.replace(/(_\d+x|_{width}x)/, '').replace(/^\/\//, '')
-
-//     // Format secondary images
-//     const secondary = rawSecondary
-//       .split(',')
-//       .map((entry) => entry.trim().split(' ')[0]) // remove resolution suffixes like "300w"
-//       .filter((url) => url.startsWith('//'))
-//       .map((url) => 'https://' + url.replace(/^\/\//, '').replace(/_\d+x/, ''))
-//       .shift()
-
-//     if (firstElement) {
-//       const product = {
-//         id: firstElement.getAttribute('data-productid'),
-//         url: firstElement.querySelector('a.grid-product__link')?.getAttribute('href'),
-//         name: firstElement.querySelector('.grid-product__title')?.textContent.trim(),
-//         price: firstElement.querySelector('.grid-product__actual-price')?.textContent.trim(),
-//         image: {
-//           primary,
-//           secondary,
-//         },
-//         sizes: [],
-//       }
-
-//       firstElement.querySelectorAll('.swatch.is-size').forEach((sizeBtn) => {
-//         product.sizes.push({
-//           size: sizeBtn.getAttribute('data-size-value'),
-//           inStock: sizeBtn.getAttribute('data-tooltip') === 'In Stock',
-//           rating: firstElement.querySelector('.oke-sr-rating')?.textContent.trim(),
-//           reviewCount: firstElement.querySelector('.oke-sr-count-number')?.textContent.trim(),
-//         })
-//       })
-
-//       if (product.url) {
-//         product.url = new URL(product.url, baseUrl).toString()
-//         products.push(product)
-//       }
-//     }
-
-//     return products
-//   }, baseUrl)
-// }

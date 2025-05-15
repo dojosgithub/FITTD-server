@@ -26,12 +26,11 @@ const userMeasurementSchema = new mongoose.Schema({
     bicep: measurementSchema, // Men only
 
     sleevesLength: measurementSchema,
-    waist: measurementSchema,
     torsoHeight: measurementSchema,
   },
 
   lowerBody: {
-    lowerWaist: measurementSchema,
+    waist: measurementSchema,
     hip: measurementSchema,
     inseam: measurementSchema,
     legLength: measurementSchema,

@@ -1,159 +1,67 @@
-export const categoryStructure = {
+export const groupedByType = {
+  denim: [],
+  outerwear: [],
   tops: [],
   bottoms: [],
-  knitwear: [],
-  swimwear: [],
-  sweaters: [],
-  // sweatsuits: [],
-  playsuitsJumpsuits: [],
-  sleep: [],
-  heels: [],
-  mules: [],
-  sandals: [],
-  hair: [],
-  belts: [],
-  bracelets: [],
-  sunglasses: [],
-  rings: [],
-  earrings: [],
-  necklaces: [],
-  anklets: [],
-  bags: [],
-  hats: [],
-  socks: [],
-  resortWear: [],
-  backless: [],
-  restocking: [],
-  beauty: [],
-  dresses: [], // ✅ Add this
-  Others: [], // ✅ Add this
+  dresses: [],
+  accessories: [],
+  footwear: [],
 }
 
-// Define category keywords
-export const categoryKeywords = {
-  swimwear: ['swimsuit', 'bikini', 'swim'],
-  sandals: ['sandals'],
-  heels: ['heels'],
-  mules: ['mules'],
-  accessories: {
-    sunglasses: ['sunglasses'],
-    bags: ['bag', 'baguette', 'tote', 'purse', 'wet bag'],
-    belts: ['belt'],
-    earrings: ['earrings', 'huggie', 'stud'],
-    hair: ['claw clip', 'hair', 'scrunchie', 'clip'],
-    necklaces: ['necklace'],
-    anklets: ['anklet'],
-    rings: ['ring'],
-    bracelets: ['bracelet', 'bangle'],
-    hats: ['cap', 'hat'],
-    socks: ['socks'],
-  },
-  sleep: ['pj set', 'robe', 'bra'],
-  // sweatsuits: ['track pants', 'sweatpants', 'athletic shorts', 'bike shorts', 'hoodie'],
-  sweaters: ['sweater'],
-  resortWear: [
-    'beach',
-    'shoreline',
-    'paradise',
-    'cove',
-    'shore',
-    'isla',
-    'sea',
-    'tropical',
-    'oceano',
-    'seaview',
-    'santorini',
-    'milos',
-    'amalfi',
-    'rhodes',
-    'greece',
-    'villagio',
-  ],
-  knitwear: ['knit', 'fleece', 'cable knit', 'jumper', 'waffle'],
-  playsuitsJumpsuits: ['playsuit', 'jumpsuit'],
-  tops: [
-    'top',
-    'tee',
-    'shirt',
-    'blouse',
-    'cardi',
-    'cardigan',
-    'blazer',
-    'bodysuit',
-    'corset',
-    'halter',
-    'puff',
-    'crew',
-    'jumper',
-  ],
-  bottoms: ['pants', 'bottom', 'leggings', 'draw skirt', 'shorts', 'skirt', 'skort'],
-  dresses: ['dress'],
-  backless: ['backless'],
-  beauty: ['shampoo', 'wand', 'face pads', 'cotton', 'g-string', 'underwear'],
-  restocking: ['sample-'],
-}
+export const categorizeProductByName = (name, ebDenim) => {
+  const lower = name.toLowerCase()
+  // Denim category
+  const hasBoleroOrCorset = /(bolero|corset)/.test(lower)
+  const hasDressOrTop = /(dress|sundress|gown|maxi|midi|mini|bridal|jumpsuit|top|skirt)/.test(lower)
+  if (hasBoleroOrCorset && !hasDressOrTop) {
+    return 'tops'
+  }
 
-export function categorizeProducts(products) {
-  const categorized = JSON.parse(JSON.stringify(categoryStructure))
+  if (/denim/.test(lower)) {
+    return 'denim'
+  }
+  // Dresses category
+  if (/(dress|bodysuit|sundress|gown|bridal|gown|jumpsuit|playsuit)/.test(lower)) {
+    return 'dresses'
+  }
 
-  products.forEach((product) => {
-    const productName = product.name.toLowerCase()
+  // Outerwear category
+  if (/(cardigan|coat|jacket|blazer|jacket|hoodie|popover|zip|vest|parka|anorak|windbreaker)/.test(lower)) {
+    return 'outerwear'
+  }
+  // Footwear category
+  if (
+    /\b(heel|heels|boot|boots|shoe|shoes|sock|socks|footwear|sandal|sandals|loafer|loafers|mule|mules|sneaker|sneakers|platform|platforms|wedge|wedges|slipper|slippers|flat|flats|flop|flops|jogger|joggers|slide|slides)\b/.test(
+      lower
+    )
+  ) {
+    return 'footwear'
+  }
+  // Accessories category
+  if (
+    /(bag|belt|accessory|cap|veil|earring|necklace|scarf|hat|bracelet|glove|ring|headband|sunglasses|clutch|watch|wallet|keychain|beaded|brooch|headband|belted|jewelry|chain|handbag|purse|glasses|glove|hair)/.test(
+      lower
+    )
+  ) {
+    return 'accessories'
+  }
+  // Tops category
+  if (
+    /\b(top|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse)\b/.test(
+      lower
+    )
+  ) {
+    return 'tops'
+  }
 
-    // Helper to push and return true if matched
-    const assign = (key) => {
-      categorized[key].push(product)
-      return true
-    }
+  // Bottoms category
+  const standardBottomsRegex =
+    /(skirt|bottom|trouser|short|capri|pant|legging|jean|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/
+  const ebDenimExtras = /(loose bowed|extra baggy|barrel|double knee|slim cigarette)/
 
-    // Sample products
-    if (productName.includes('sample-')) return assign('restocking')
+  if (standardBottomsRegex.test(lower) || (ebDenim && ebDenimExtras.test(lower))) {
+    return 'bottoms'
+  }
 
-    // Check for beauty products
-    if (categoryKeywords.beauty.some((keyword) => productName.includes(keyword))) return assign('beauty')
-
-    // Shoes
-    if (categoryKeywords.heels.some((keyword) => productName.includes(keyword))) return assign('heels')
-    if (categoryKeywords.sandals.some((keyword) => productName.includes(keyword))) return assign('sandals')
-    if (categoryKeywords.mules.some((keyword) => productName.includes(keyword))) return assign('mules')
-    // Accessories
-    for (const [category, keywords] of Object.entries(categoryKeywords.accessories)) {
-      if (keywords.some((keyword) => new RegExp(`\\b${keyword}\\b`).test(productName))) return assign(category)
-    }
-
-    // Swimwear
-    if (categoryKeywords.swimwear.some((keyword) => productName.includes(keyword))) return assign('swimwear')
-
-    // Resort wear
-    if (categoryKeywords.resortWear.some((keyword) => productName.includes(keyword))) return assign('resortWear')
-
-    // Knitwear
-    if (categoryKeywords.knitwear.some((keyword) => productName.includes(keyword))) return assign('knitwear')
-    if (categoryKeywords.sweaters.some((keyword) => productName.includes(keyword))) return assign('sweaters')
-
-    // Playsuits/jumpsuits
-    if (categoryKeywords.playsuitsJumpsuits.some((keyword) => productName.includes(keyword)))
-      return assign('playsuitsJumpsuits')
-
-    // Tops
-    if (categoryKeywords.tops.some((keyword) => productName.includes(keyword))) return assign('tops')
-
-    // Bottoms
-    if (categoryKeywords.bottoms.some((keyword) => productName.includes(keyword))) return assign('bottoms')
-
-    // Dresses
-    if (categoryKeywords.dresses.some((keyword) => productName.includes(keyword))) {
-      if (productName.includes('backless')) return assign('backless')
-      return assign('dresses')
-    }
-
-    // Backless
-    if (categoryKeywords.backless.some((keyword) => productName.includes(keyword))) return assign('backless')
-
-    if (categoryKeywords.sleep.some((keyword) => productName.includes(keyword))) return assign('sleep')
-
-    // Fallback: backIn as new arrivals
-    return assign('Others')
-  })
-
-  return categorized
+  return 'accessories'
 }
