@@ -50,6 +50,9 @@ const getBrowser = async (headlessValue) => {
         '--enable-cookies',
         '--disable-software-rasterizer',
         '--disable-extensions',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--user-data-dir=/tmp/puppeteer_user_data',
       ],
     })
   }
@@ -168,7 +171,7 @@ const createPagePool = async (browser, size = MAX_CONCURRENCY) => {
   return pagePool
 }
 
-const setupPage = async (categoryUrl, waitForSelector, existingPage = null, headless = 'new') => {
+const setupPage = async (categoryUrl, waitForSelector, existingPage = null, headless = 'new', isLuluLemon = false) => {
   let page = existingPage
   const browser = await getBrowser(headless)
 
@@ -181,20 +184,24 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null, head
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       )
-
-      // Set additional headers
       await page.setExtraHTTPHeaders({
         'Accept-Language': 'en-US,en;q=0.9',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,/;q=0.8',
         Connection: 'keep-alive',
       })
     }
-
-    await page.goto(categoryUrl, {
-      waitUntil: 'domcontentloaded',
-      timeout: 1000000,
-    })
-
+    if (isLuluLemon) {
+      // Improved navigation with better error handling
+      const response = await page.goto(categoryUrl, {
+        waitUntil: 'networkidle2',
+        timeout: 120000,
+      })
+    } else {
+      await page.goto(categoryUrl, {
+        waitUntil: 'domcontentloaded',
+        timeout: 1000000,
+      })
+    }
     if (waitForSelector) {
       await page.waitForSelector(waitForSelector, { timeout: 1000000 })
     }
@@ -938,7 +945,7 @@ const fetchLuluLemonProductDescription = async (url, page) => {
 
 const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   const selector = 'div[data-testid="product-tile"]'
-  const page = await setupPage(categoryUrl, selector, existingPage)
+  const page = await setupPage(categoryUrl, selector, existingPage, 'new', true)
 
   if (!page) {
     return []
