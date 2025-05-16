@@ -3,6 +3,7 @@ import { Router } from 'express'
 
 // * Controllers
 import { CONTROLLER_ADMIN } from '../controllers'
+import { Authenticate } from '../middlewares'
 
 const router = Router()
 

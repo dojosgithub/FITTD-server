@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes'
+import { asyncMiddleware } from '../middlewares'
 
 export const CONTROLLER_ADMIN = {
   restartServer: asyncMiddleware(async (req, res) => {
