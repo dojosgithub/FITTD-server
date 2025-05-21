@@ -6,7 +6,7 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
-const MAX_CONCURRENCY = 15
+const MAX_CONCURRENCY = 5
 // * Models
 
 import { asyncMiddleware } from '../middlewares'
@@ -45,14 +45,13 @@ const getBrowser = async (headlessValue) => {
         '--window-size=1920,1080',
         // Avoid detection
         '--disable-blink-features=AutomationControlled',
-        // Enable necessary features
         '--enable-javascript',
         '--enable-cookies',
-        '--disable-software-rasterizer',
-        '--disable-extensions',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--user-data-dir=/tmp/puppeteer_user_data',
+        // '--disable-software-rasterizer',
+        // '--disable-extensions',
+        // '--disable-web-security',
+        // '--disable-features=IsolateOrigins,site-per-process',
+        // '--user-data-dir=/tmp/puppeteer_user_data',
       ],
     })
   }

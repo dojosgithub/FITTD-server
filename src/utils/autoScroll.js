@@ -36,8 +36,8 @@ export async function loadMoreLuluLemonProducts(page, selector, categoryUrl) {
   let round = 1
   let consecutiveNoChanges = 0
   let totalRefreshes = 0
-  const maxRefreshes = 25
-  const consecutiveNoChangesLimit = 15
+  const maxRefreshes = 10
+  const consecutiveNoChangesLimit = 5
   let currentCount = await page.$$eval(productSelector, (els) => els.length)
   console.log(`🔎 [LuluLemon] Initial product count: ${currentCount}`)
   previousCount = currentCount
@@ -85,7 +85,7 @@ export async function loadMoreLuluLemonProducts(page, selector, categoryUrl) {
                   buttons: 1,
                 })
                 btn.dispatchEvent(clickEvent)
-              }, 500)
+              }, 100)
             }
           }, buttonSelector)
 
@@ -178,200 +178,6 @@ export async function loadMoreLuluLemonProducts(page, selector, categoryUrl) {
   console.log(`🏁 Final product count: ${finalCount}`)
 
   return finalCount
-}
-
-// const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-// const countValidProducts = async (page) => {
-//   return await page.evaluate(() => {
-//     return Array.from(document.querySelectorAll('div.flex.transition-all.w-full')).filter((block) => {
-//       const link = block.querySelector('a.flex.relative.justify-center.items-start')
-//       const name = block.querySelector('div.font-chemre')
-//       const price = block.querySelector('div.font-gotham-bold')
-//       return link && name && price
-//     }).length
-//   })
-// }
-
-// export async function loadMoreLuluLemonProducts(page) {
-//   const productSelector = 'div[data-testid="product-tile"]'
-//   const buttonSelector = 'button[data-lll-pl="button"][class*="pagination_button"]'
-//   let previousCount = 0
-//   let round = 1
-//   let consecutiveNoChanges = 0
-//   let totalRefreshes = 0
-//   const maxRefreshes = 5
-
-//   // Initial page scroll to load all initial products
-//   await fullPageScroll(page)
-
-//   // Get initial product count
-//   let currentCount = await page.$$eval(productSelector, (els) => els.length)
-//   console.log(`🔎 [LuluLemon] Initial product count: ${currentCount}`)
-//   previousCount = currentCount
-
-//   while (true) {
-//     // Try clicking the "View More Products" button if it exists
-//     console.log(`🔎 [LuluLemon] Round ${round}: Found ${currentCount} products before interaction`)
-
-//     // Check if button exists and is visible
-//     const buttonVisible = await page.evaluate((selector) => {
-//       const btn = document.querySelector(selector)
-//       if (!btn) return false
-
-//       const style = window.getComputedStyle(btn)
-//       const rect = btn.getBoundingClientRect()
-
-//       return (
-//         btn &&
-//         !btn.disabled &&
-//         btn.offsetParent !== null &&
-//         style.display !== 'none' &&
-//         style.visibility !== 'hidden' &&
-//         style.opacity !== '0' &&
-//         rect.width > 0 &&
-//         rect.height > 0
-//       )
-//     }, buttonSelector)
-
-//     if (buttonVisible) {
-//       // Try to click the button using multiple methods
-//       try {
-//         // Try JavaScript click
-//         await page.evaluate((selector) => {
-//           const btn = document.querySelector(selector)
-//           if (btn) {
-//             btn.scrollIntoView({ behavior: 'smooth', block: 'center' })
-//             setTimeout(() => {
-//               btn.click()
-
-//               // Also dispatch a MouseEvent
-//               const clickEvent = new MouseEvent('click', {
-//                 view: window,
-//                 bubbles: true,
-//                 cancelable: true,
-//                 buttons: 1,
-//               })
-//               btn.dispatchEvent(clickEvent)
-//             }, 500)
-//           }
-//         }, buttonSelector)
-
-//         console.log('🖱️ Clicked "View More Products" button')
-//         await page.waitForTimeout(2500)
-
-//         // Try physical mouse click as well
-//         const buttonHandle = await page.$(buttonSelector)
-//         if (buttonHandle) {
-//           const box = await buttonHandle.boundingBox()
-//           if (box) {
-//             await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 5 })
-//             await page.mouse.down()
-//             await page.waitForTimeout(100)
-//             await page.mouse.up()
-//           }
-//         }
-//       } catch (error) {
-//         console.error('Error trying to click button:', error)
-//       }
-
-//       // Scroll to load any new content
-//       await fullPageScroll(page)
-//     } else {
-//       console.log('🚫 "View More Products" button not found or not visible')
-
-//       // If we're in later rounds and the button disappears, we've likely loaded all products
-//       if (round > 1) {
-//         console.log('✅ Button no longer visible - likely all products loaded')
-//         break
-//       }
-//     }
-
-//     // Wait for new products to appear
-//     await page.waitForTimeout(2500)
-//     let newCount = await page.$$eval(productSelector, (els) => els.length)
-//     console.log(`📦 Products after interaction: ${newCount}`)
-
-//     // Check if we got new products
-//     if (newCount > previousCount) {
-//       console.log(`✨ ${newCount - previousCount} new products loaded!`)
-//       previousCount = newCount
-//       currentCount = newCount
-//       consecutiveNoChanges = 0
-//     } else {
-//       consecutiveNoChanges++
-//       console.log(`⚠️ No new products loaded (attempt ${consecutiveNoChanges})`)
-
-//       // If we've tried a few times with no new products, try refreshing the page
-//       if (consecutiveNoChanges >= 2 && totalRefreshes < maxRefreshes) {
-//         totalRefreshes++
-//         console.log(`🔄 Refreshing page (refresh ${totalRefreshes}/${maxRefreshes})...`)
-
-//         // Save the current URL in case we need it
-//         const currentUrl = await page.url()
-
-//         // Refresh the page
-//         await page.reload({ waitUntil: 'networkidle2' })
-//         await page.waitForTimeout(5000)
-
-//         // Scroll to load all content after refresh
-//         await fullPageScroll(page)
-
-//         // Get new count after refresh
-//         newCount = await page.$$eval(productSelector, (els) => els.length)
-//         console.log(`📦 Products after refresh: ${newCount}`)
-
-//         // If refresh helped, reset the counter
-//         if (newCount > previousCount) {
-//           console.log(`✨ ${newCount - previousCount} new products loaded after refresh!`)
-//           previousCount = newCount
-//           currentCount = newCount
-//           consecutiveNoChanges = 0
-//         }
-//       } else if (consecutiveNoChanges >= 3 || totalRefreshes >= maxRefreshes) {
-//         console.log(`🏁 No more products loading after multiple attempts. Finished at ${newCount} products.`)
-//         break
-//       }
-//     }
-
-//     round++
-
-//     // Safety check to prevent infinite loops
-//     if (round > 15) {
-//       console.log('⚠️ Reached maximum number of rounds, stopping')
-//       break
-//     }
-//   }
-
-//   // Do one final scroll and count to make sure we have everything
-//   await fullPageScroll(page)
-//   const finalCount = await page.$$eval(productSelector, (els) => els.length)
-//   console.log(`🏁 Final product count: ${finalCount}`)
-
-//   return finalCount
-// }
-
-/**
- * Scroll through the entire page to ensure all lazy-loaded content appears
- * @param {Page} page - Puppeteer page object
- */
-async function fullPageScroll(page) {
-  // Get the page height
-  const pageHeight = await page.evaluate(() => document.body.scrollHeight)
-  const viewportHeight = await page.evaluate(() => window.innerHeight)
-
-  // Scroll in small increments
-  for (let i = 0; i < pageHeight; i += Math.floor(viewportHeight / 2)) {
-    await page.evaluate((position) => window.scrollTo(0, position), i)
-    await page.waitForTimeout(300)
-  }
-
-  // Scroll to bottom
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-  await page.waitForTimeout(800)
-
-  // Scroll back up a bit to trigger any remaining lazy loading
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight - 200))
-  await page.waitForTimeout(500)
 }
 
 export const autoScrollReformationProducts = async (page) => {

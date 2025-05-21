@@ -1,7 +1,7 @@
 // * Libraries
 import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
-import { Product, ProductFlat, SizeChart, UserMeasurement } from '../models'
+import { Product, SizeChart, UserMeasurement } from '../models'
 import { asyncMiddleware } from '../middlewares'
 import { determineSubCategory } from '../utils/categoryConfig'
 import { aggregateProductsByBrandAndCategory, getMatchingSizes } from '../utils'
@@ -9,92 +9,6 @@ import { aggregateProductsByBrandAndCategory, getMatchingSizes } from '../utils'
 dotenv.config()
 
 export const CONTROLLER_PRODUCT = {
-  // Get all wishlist items for user
-  getProducts: asyncMiddleware(async (req, res) => {
-    const { _id: userId } = req.decoded
-
-    const items = await Product.find()
-
-    return res.status(StatusCodes.OK).json({ data: items })
-  }),
-
-  // getByBrandsAndCategories: asyncMiddleware(async (req, res) => {
-  //   let { brand, category } = req.query
-
-  //   // Validate query params
-  //   if (!brand && !category) {
-  //     return res.status(400).json({ message: "At least one query param ('brand' or 'category') is required." })
-  //   }
-
-  //   // Parse query params to arrays
-  //   const brands = brand?.split(',').map((b) => b.trim()) || []
-  //   const categories = category?.split(',').map((c) => c.trim()) || []
-
-  //   // Fetch product data
-  //   const allProductsDoc = await Product.findOne()
-  //   if (!allProductsDoc) {
-  //     return res.status(404).json({ message: 'No products found.' })
-  //   }
-
-  //   const productsMap = allProductsDoc.products
-  //   const result = {}
-
-  //   // Case: Only category is provided → search across all brands for those categories
-  //   if (!brands.length && categories.length) {
-  //     for (const [brandName, brandData] of productsMap.entries()) {
-  //       const matchedCategories = {}
-  //       for (const cat of categories) {
-  //         matchedCategories[cat] = Array.isArray(brandData[cat]) ? brandData[cat] : []
-  //       }
-  //       result[brandName] = matchedCategories
-  //     }
-  //   }
-
-  //   // Case: Only brand is provided → return all categories for that brand
-  //   else if (brands.length && !categories.length) {
-  //     for (const b of brands) {
-  //       const brandData = productsMap.get(b)
-  //       if (!brandData) {
-  //         result[b] = {} // Brand not found, still include empty object
-  //         continue
-  //       }
-
-  //       const plainBrandData = brandData.toObject() // <-- Fix
-
-  //       result[b] = {}
-  //       for (const cat in plainBrandData) {
-  //         result[b][cat] = Array.isArray(plainBrandData[cat]) ? plainBrandData[cat] : []
-  //       }
-  //     }
-  //   }
-
-  //   // Case: Both brand & category are provided → filter selected brands for selected categories
-  //   else if (brands.length && categories.length) {
-  //     for (const b of brands) {
-  //       const brandData = productsMap.get(b)
-  //       result[b] = {}
-
-  //       for (const cat of categories) {
-  //         result[b][cat] = brandData?.[cat] ?? []
-  //       }
-  //     }
-  //   }
-
-  //   let totalCount = 0
-
-  //   // Calculate total number of products
-  //   for (const brand in result) {
-  //     for (const category in result[brand]) {
-  //       totalCount += result[brand][category].length
-  //     }
-  //   }
-
-  //   return res.status(StatusCodes.OK).json({
-  //     results: totalCount,
-  //     data: result,
-  //   })
-  // }),
-
   getByBrandsAndCategories: asyncMiddleware(async (req, res) => {
     const { brand, category, page = 1, limit = 10 } = req.query
 
@@ -109,7 +23,7 @@ export const CONTROLLER_PRODUCT = {
 
     const aggregationPipeline = aggregateProductsByBrandAndCategory(brands, categories, page, limit)
 
-    const groupedResults = await ProductFlat.aggregate(aggregationPipeline)
+    const groupedResults = await Product.aggregate(aggregationPipeline)
 
     if (!groupedResults.length) {
       return res.status(404).json({ message: 'No matching products found.' })
@@ -122,7 +36,7 @@ export const CONTROLLER_PRODUCT = {
     }
 
     // Count total number of matched products (without pagination)
-    const totalCount = await ProductFlat.countDocuments({
+    const totalCount = await Product.countDocuments({
       ...(brands.length && { brand: { $in: brands } }),
       ...(categories.length && { category: { $in: categories } }),
     })
@@ -132,7 +46,6 @@ export const CONTROLLER_PRODUCT = {
       data: groupedByBrand,
     })
   }),
-
   getRecommendedProducts: asyncMiddleware(async (req, res) => {
     const BATCH_SIZE = 20 // Number of products to fetch in each database query
     const { brands, category, PAGE_SIZE = 10 } = req.query
@@ -218,7 +131,7 @@ export const CONTROLLER_PRODUCT = {
       let hasMoreProducts = true
 
       while (matchedProducts.length < productsPerBrand && hasMoreProducts) {
-        const productsBatch = await ProductFlat.aggregate([
+        const productsBatch = await Product.aggregate([
           {
             $match: {
               brand,
@@ -319,35 +232,10 @@ export const CONTROLLER_PRODUCT = {
   }),
 
   migrateProducts: asyncMiddleware(async (req, res) => {
-    const oldDoc = await Product.findOne() // Assuming only one document with all products
-    console.log('oldDoc', oldDoc)
-    if (!oldDoc || !oldDoc.products) {
-      console.log('No products found.')
-      return
-    }
+    const flatProducts = await Product.find({})
 
-    const flatProducts = []
-
-    for (const [brand, brandData] of oldDoc.products.entries()) {
-      console.log(`Processing brand: ${brand}`)
-      for (const category of Object.keys(brandData.toObject())) {
-        if (category === '_id') continue
-        const productList = brandData[category]
-        if (Array.isArray(productList)) {
-          console.log(`  → Category: ${category}, ${productList.length} products`)
-          for (const product of productList) {
-            flatProducts.push({
-              brand,
-              category,
-              ...product.toObject(), // convert Mongoose doc to plain JS object
-            })
-          }
-        }
-      }
-    }
-
-    // Insert into new collection
-    await ProductFlat.insertMany(flatProducts)
+    console.log(`🔁 Copying ${flatProducts.length} products to "products" collection...`)
+    await Product.insertMany(flatProducts)
     console.log(`✅ Migrated ${flatProducts.length} products`)
   }),
 }

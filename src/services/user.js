@@ -3,7 +3,7 @@
 import jwt from 'jsonwebtoken'
 
 // * Models
-import { Product, ProductFlat, User } from '../models'
+import { Product, User } from '../models'
 import Email from '../utils/email'
 import { OAuth2Client } from 'google-auth-library'
 import { getCategoriesName } from '../utils'
@@ -151,8 +151,8 @@ export const updateOrCreateProductCollection = async (collectionName, groupedByT
   }
 
   // Option 1: Clear and insert fresh
-  await ProductFlat.deleteMany({ brand: collectionName })
-  await ProductFlat.insertMany(allProducts)
+  await Product.deleteMany({ brand: collectionName })
+  await Product.insertMany(allProducts)
 
   return { message: `Products for ${collectionName} updated.`, count: allProducts.length }
 }
