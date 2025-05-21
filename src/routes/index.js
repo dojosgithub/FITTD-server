@@ -6,6 +6,7 @@ import scraperRoutes from './scraper'
 import wishlistRoutes from './wishlist'
 import productRoutes from './products'
 import adminRoutes from './admin'
+import sizeChartRoutes from './sizeChart'
 
 const router = Router()
 
@@ -16,5 +17,6 @@ router.use('/scraper', scraperRoutes)
 router.use('/wishlist', wishlistRoutes)
 router.use('/product', productRoutes)
 router.use('/admin', adminRoutes)
+router.use('/brand', sizeChartRoutes)
 
 export default router

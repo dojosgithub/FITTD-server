@@ -167,3 +167,63 @@ export const getShortName = (string) => {
 
   return shortName.toUpperCase()
 }
+const isMeasurementInRange = (userValue, sizeValue) => {
+  if (typeof sizeValue === 'number' || (typeof sizeValue === 'string' && !sizeValue.includes('-'))) {
+    return Math.abs(userValue - Number(sizeValue)) <= 1
+  }
+
+  if (typeof sizeValue === 'string' && sizeValue.includes('-')) {
+    const [min, max] = sizeValue.split('-').map(parseFloat)
+    return userValue >= min && userValue <= max
+  }
+
+  return false
+}
+
+export const getMatchingSizes = (
+  brand,
+  subCategory,
+  sizeChart,
+  sizeMatchCacheByBrand,
+  userBust,
+  userWaist,
+  userHip
+) => {
+  const brandCache = sizeMatchCacheByBrand[brand]
+
+  if (brandCache[subCategory]) return brandCache[subCategory]
+
+  let match = null
+
+  for (const { measurements, name, numericalSize, numericalValue } of sizeChart) {
+    const { bust, waist, hip } = measurements
+
+    if (subCategory === 'tops' || subCategory === 'outerwear' || subCategory === 'dresses') {
+      const bustMatch = isMeasurementInRange(userBust, bust)
+      const waistMatch = isMeasurementInRange(userWaist, waist)
+
+      if (bustMatch) {
+        match = { name, numericalSize, numericalValue }
+        break // Prioritize bust, so stop here
+      } else if (waistMatch) {
+        match = { name, numericalSize, numericalValue }
+        break
+      }
+    } else if (subCategory === 'bottoms') {
+      const waistMatch = isMeasurementInRange(userWaist, waist)
+      const hipMatch = isMeasurementInRange(userHip, hip)
+
+      if (waistMatch) {
+        match = { name, numericalSize, numericalValue }
+        break // Prioritize waist, so stop here
+      } else if (hipMatch) {
+        match = { name, numericalSize, numericalValue }
+        break
+      }
+    }
+  }
+
+  const result = match ? [match] : []
+  brandCache[subCategory] = result
+  return result
+}

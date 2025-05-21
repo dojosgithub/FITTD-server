@@ -63,7 +63,6 @@
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "cheerio": "^1.0.0",
-    "chrome-aws-lambda": "^10.1.0",
     "cloudinary": "^1.41.3",
     "cognito-express": "^3.0.1",
     "convert-excel-to-json": "^1.7.0",

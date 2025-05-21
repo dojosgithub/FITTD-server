@@ -6,7 +6,7 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
 dotenv.config()
 process.setMaxListeners(50)
-const MAX_CONCURRENCY = 3
+const MAX_CONCURRENCY = 15
 // * Models
 
 import { asyncMiddleware } from '../middlewares'
@@ -58,48 +58,6 @@ const getBrowser = async (headlessValue) => {
   }
   return globalBrowser
 }
-
-// const getBrowser = async (headlessValue = true) => {
-//   if (!globalBrowser) {
-//     globalBrowser = await puppeteer.launch({
-//       headless: headlessValue, // Always use headless on Heroku
-//       args: [
-//         '--no-sandbox',
-//         '--disable-setuid-sandbox',
-//         '--disable-dev-shm-usage',
-//         '--single-process',
-//         '--no-zygote',
-//         // Memory specific flags
-//         '--memory-pressure-off',
-//         '--disable-default-apps',
-//         '--disable-extensions',
-//         '--disable-sync',
-//         '--disable-background-networking',
-//         '--disable-background-timer-throttling',
-//         '--disable-backgrounding-occluded-windows',
-//         '--disable-breakpad',
-//         '--disable-client-side-phishing-detection',
-//         '--disable-component-extensions-with-background-pages',
-//         '--disable-features=TranslateUI,BlinkGenPropertyTrees',
-//         '--disable-ipc-flooding-protection',
-//         '--disable-renderer-backgrounding',
-//         '--mute-audio',
-//       ],
-//     })
-//   }
-//   return globalBrowser
-// }
-
-// const getBrowser = async () => {
-//   if (!globalBrowser) {
-//     globalBrowser = await chromium.puppeteer.launch({
-//       args: chromium.args,
-//       executablePath: (await chromium.executablePath) || '/usr/bin/chromium-browser',
-//       headless: chromium.headless,
-//     })
-//   }
-//   return globalBrowser
-// }
 
 const createPage = async (browser) => {
   const page = await browser.newPage()
@@ -171,7 +129,7 @@ const createPagePool = async (browser, size = MAX_CONCURRENCY) => {
   return pagePool
 }
 
-const setupPage = async (categoryUrl, waitForSelector, existingPage = null, headless = 'new', isLuluLemon = false) => {
+const setupPage = async (categoryUrl, waitForSelector, existingPage = null, headless = 'new') => {
   let page = existingPage
   const browser = await getBrowser(headless)
 
@@ -180,7 +138,7 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null, head
       page = await browser.newPage()
 
       // Set realistic viewport and user agent
-      await page.setViewport({ width: 1280, height: 720 })
+      await page.setViewport({ width: 1280, height: 960 })
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       )
@@ -190,18 +148,12 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null, head
         Connection: 'keep-alive',
       })
     }
-    if (isLuluLemon) {
-      // Improved navigation with better error handling
-      const response = await page.goto(categoryUrl, {
-        waitUntil: 'networkidle2',
-        timeout: 120000,
-      })
-    } else {
-      await page.goto(categoryUrl, {
-        waitUntil: 'domcontentloaded',
-        timeout: 1000000,
-      })
-    }
+
+    await page.goto(categoryUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: 1000000,
+    })
+
     if (waitForSelector) {
       await page.waitForSelector(waitForSelector, { timeout: 1000000 })
     }
@@ -283,7 +235,7 @@ const fetchProductDescription = async (url, page) => {
           document.querySelector('.collapsible-content__inner.rte')
         )
       },
-      { timeout: 30000 }
+      { timeout: 60000 }
     )
 
     const getDescription = () => {
@@ -568,7 +520,7 @@ const fetchHouseOfCBProductDescription = async (url, page) => {
       () => {
         return document.querySelector('div.font-gotham-book') // Wait for the first div with the description
       },
-      { timeout: 30000 }
+      { timeout: 60000 }
     )
 
     // Fetch description and sizes in parallel
@@ -596,14 +548,14 @@ const fetchHouseOfCBProductDescription = async (url, page) => {
         )
 
         // If we can't find sizes with exact class match, try a more general approach
-        const sizeDivs =
-          sizeElements.length > 0
-            ? sizeElements
-            : Array.from(
-                document.querySelectorAll('.flex div[class*="flex"][class*="items-center"][class*="justify-center"]')
-              )
+        // const sizeDivs =
+        //   sizeElements.length > 0
+        //     ? sizeElements
+        //     : Array.from(
+        //         document.querySelectorAll('.flex div[class*="flex"][class*="items-center"][class*="justify-center"]')
+        //       )
 
-        return sizeDivs
+        return sizeElements
           .map((div) => {
             // Get the inner text which should be the size label (XS, S, M, L, etc.)
             const sizeText = div.innerText.trim()
@@ -945,7 +897,7 @@ const fetchLuluLemonProductDescription = async (url, page) => {
 
 const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   const selector = 'div[data-testid="product-tile"]'
-  const page = await setupPage(categoryUrl, selector, existingPage, 'new', true)
+  const page = await setupPage(categoryUrl, selector, existingPage, false)
 
   if (!page) {
     return []
@@ -1016,7 +968,7 @@ const fetchTheReformationProductDescription = async (url, page) => {
       () => {
         return document.querySelector('.pdp_fit-details') || document.querySelector('.product-attribute__contents')
       },
-      { timeout: 30000 }
+      { timeout: 60000 }
     )
 
     const { description, sizes, images } = await page.evaluate(() => {
@@ -1113,7 +1065,7 @@ const getTheReformationProductUrlsFromCategory = async (categoryUrl, existingPag
     }
   })
   try {
-    // await autoScrollReformationProducts(page)
+    await autoScrollReformationProducts(page)
     const products = await extractTheReformationProductsFromPage(page, categoryUrl)
     const productsWithDescriptions = await scrapeProductsInParallel(
       products,
@@ -1209,13 +1161,18 @@ const fetchSelfPotraitProductDescription = async (url, page) => {
 }
 
 const getSelfPotraitProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
-  const selector = '.prd-List'
+  const selector = 'li.prd-List_Item'
   const page = await setupPage(categoryUrl, selector, existingPage)
   if (!page) {
     return []
   }
+  page.on('console', (msg) => {
+    if (msg.type() === 'log') {
+      console.log(`🧠 BROWSER LOG: ${msg.text()}`)
+    }
+  })
   try {
-    await loadMoreSelfPotraitProducts(page, '.prd-List_Item', '.pgn-LoadMore_Button')
+    // await loadMoreSelfPotraitProducts(page, 'li.prd-List_Item', '.pgn-LoadMore_Button')
     const products = await extractSelfPortraitProductsFromPage(page, categoryUrl)
     const productsWithDescriptions = await scrapeProductsInParallel(
       products,
@@ -1223,6 +1180,18 @@ const getSelfPotraitProductUrlsFromCategory = async (categoryUrl, existingPage =
       fetchSelfPotraitProductDescription
     )
     console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
+    const hasNextPage = await page.evaluate(() => {
+      const nextPageLink = document.querySelector('link[rel=next]')
+      return nextPageLink ? nextPageLink.getAttribute('href') : null
+    })
+
+    if (hasNextPage) {
+      const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+      const nextPageProducts = await getSelfPotraitProductUrlsFromCategory(nextPageUrl, page)
+      return [...productsWithDescriptions, ...nextPageProducts]
+    }
+
     return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
@@ -1414,7 +1383,7 @@ export const CONTROLLER_SCRAPER = {
 
       // res.status(StatusCodes.OK).json({
       //   // results: products.length,
-      //   data: newProductCollection,
+      //   data: groupedByType,
       //   message: 'Products Fetched and Saved successfully',
       // })
     } finally {
@@ -1550,7 +1519,7 @@ export const CONTROLLER_SCRAPER = {
         { type: 'wedding', url: 'https://www.thereformation.com/bridal?page=28' },
         { type: 'shoes', url: 'https://www.thereformation.com/shoes?page=29' },
         { type: 'bags', url: 'https://www.thereformation.com/bags?page=7' },
-        { type: 'clothes', url: 'https://www.thereformation.com/clothing?page=203' },
+        { type: 'clothes', url: 'https://www.thereformation.com/clothing?page=125' },
       ]
 
       for (const category of categories) {

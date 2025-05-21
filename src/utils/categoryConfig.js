@@ -1,3 +1,6 @@
+export const getCategoriesName = () => {
+  return ['outerwear', 'denim', 'tops', 'bottoms', 'dresses', 'accessories', 'footwear']
+}
 export const groupedByType = {
   denim: [],
   outerwear: [],
@@ -64,4 +67,24 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
 
   return 'accessories'
+}
+
+export const determineSubCategory = (category, productName) => {
+  const lower = productName.toLowerCase()
+
+  return category === 'denim'
+    ? /(dress|bodysuit|sundress|gown|bridal|jumpsuit|playsuit)/.test(lower)
+      ? 'dresses'
+      : /(cardigan|coat|jacket|blazer|hoodie|popover|zip|vest|parka|anorak|windbreaker)/.test(lower)
+      ? 'outerwear'
+      : /\b(top|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse)\b/.test(
+          lower
+        )
+      ? 'tops'
+      : /(skirt|bottom|trouser|short|capri|pant|legging|jean|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/.test(
+          lower
+        )
+      ? 'bottoms'
+      : null
+    : category
 }
