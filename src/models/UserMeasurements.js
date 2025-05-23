@@ -53,6 +53,7 @@ const userMeasurementSchema = new mongoose.Schema({
 
   faceMeasurement: {
     faceLength: measurementSchema,
+    faceWidth: measurementSchema,
   },
 })
 export const UserMeasurement = model('UserMeasurement', userMeasurementSchema)

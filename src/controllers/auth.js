@@ -261,7 +261,7 @@ export const CONTROLLER_AUTH = {
     }
 
     // 1. Find the user in the database
-    const user = await User.findById({ userId }).select('+password')
+    const user = await User.findById(userId).select('+password')
     console.log('user', user)
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })

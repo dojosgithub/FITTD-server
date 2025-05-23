@@ -180,6 +180,179 @@ const isMeasurementInRange = (userValue, sizeValue) => {
   return false
 }
 
+// export const getMatchingSizes = (
+//   brand,
+//   subCategory,
+//   sizeChart,
+//   sizeMatchCacheByBrand,
+//   userBust,
+//   userWaist,
+//   userHip
+// ) => {
+//   const brandCache = sizeMatchCacheByBrand[brand]
+
+//   if (brandCache[subCategory]) return brandCache[subCategory]
+
+//   let match = null
+
+//   for (const { measurements, name, numericalSize, numericalValue } of sizeChart) {
+//     const { bust, waist, hip } = measurements
+
+//     if (subCategory === 'tops' || subCategory === 'outerwear' || subCategory === 'dresses') {
+//       const bustMatch = isMeasurementInRange(userBust, bust)
+//       const waistMatch = isMeasurementInRange(userWaist, waist)
+
+//       if (bustMatch) {
+//         match = { name, numericalSize, numericalValue }
+//         break // Prioritize bust, so stop here
+//       } else if (waistMatch) {
+//         match = { name, numericalSize, numericalValue }
+//         break
+//       }
+//     } else if (subCategory === 'bottoms') {
+//       const waistMatch = isMeasurementInRange(userWaist, waist)
+//       const hipMatch = isMeasurementInRange(userHip, hip)
+
+//       if (waistMatch) {
+//         match = { name, numericalSize, numericalValue }
+//         break // Prioritize waist, so stop here
+//       } else if (hipMatch) {
+//         match = { name, numericalSize, numericalValue }
+//         break
+//       }
+//     }
+//   }
+
+//   const result = match ? [match] : []
+//   brandCache[subCategory] = result
+//   return result
+// }
+
+// export const getMatchingSizes = (
+//   brand,
+//   subCategory,
+//   sizeChart,
+//   sizeMatchCacheByBrand,
+//   userBust,
+//   userWaist,
+//   userHip,
+//   userSleeves
+// ) => {
+//   const brandCache = sizeMatchCacheByBrand[brand];
+//   if (brandCache[subCategory]) return brandCache[subCategory];
+
+//   let bestMatch = null;
+//   let fallbackMatch = null;
+//   const isJ_Crew = brand === 'J_Crew';
+
+//   for (const { name, numericalSize, numericalValue, measurements } of sizeChart) {
+//     // Extract size part and sizing type (e.g. M-L#Tall or S#Classic)
+//     let sizePart = name;
+//     let sizingType = '';
+//     if (isJ_Crew && name.includes('#')) {
+//       const [part, type] = name.split('#');
+//       sizePart = part;
+//       sizingType = type;
+//     }
+
+//     // For J_Crew, average measurements if size is a range like M-L
+//     let bust, waist, hip, sleeves;
+
+//     if (isJ_Crew && sizePart.includes('-')) {
+//       const [size1, size2] = sizePart.split('-');
+//       const m1 = sizeChart.find(s => s.name === size1)?.measurements || {};
+//       const m2 = sizeChart.find(s => s.name === size2)?.measurements || {};
+
+//       const avg = (a, b) => {
+//         const n1 = parseFloat(a);
+//         const n2 = parseFloat(b);
+//         return isNaN(n1) || isNaN(n2) ? '' : ((n1 + n2) / 2).toFixed(1);
+//       };
+
+//       bust = avg(m1.bust, m2.bust);
+//       waist = avg(m1.waist, m2.waist);
+//       hip = avg(m1.hip, m2.hip);
+//       sleeves = avg(m1.sleeves, m2.sleeves);
+//     } else {
+//       ({ bust, waist, hip, sleeves } = measurements || {});
+//     }
+
+//     if (['tops', 'outerwear', 'dresses'].includes(subCategory)) {
+//       const bustMatch = isMeasurementInRange(userBust, bust);
+//       const waistMatch = isMeasurementInRange(userWaist, waist);
+//       const sleevesMatch = isMeasurementInRange(userSleeves, sleeves);
+
+//       if (bustMatch && sleevesMatch) {
+//         if (!isJ_Crew || sizingType === 'Tall') {
+//           bestMatch = { name, numericalSize, numericalValue };
+//           break;
+//         } else if (!bestMatch) {
+//           bestMatch = { name, numericalSize, numericalValue };
+//         }
+//       } else if (bustMatch && !fallbackMatch) {
+//         if (!isJ_Crew || sizingType !== 'Tall') {
+//           fallbackMatch = { name, numericalSize, numericalValue };
+//         }
+//       } else if (waistMatch && !fallbackMatch) {
+//         if (!isJ_Crew || sizingType !== 'Tall') {
+//           fallbackMatch = { name, numericalSize, numericalValue };
+//         }
+//       }
+//     } else if (subCategory === 'bottoms') {
+//       const waistMatch = isMeasurementInRange(userWaist, waist);
+//       const hipMatch = isMeasurementInRange(userHip, hip);
+
+//       if (waistMatch || hipMatch) {
+//         bestMatch = { name, numericalSize, numericalValue };
+//         break;
+//       }
+//     }
+//   }
+
+//   const match = bestMatch || fallbackMatch;
+//   const result = match ? [match] : [];
+//   brandCache[subCategory] = result;
+//   return result;
+// };
+// ...existing code...
+
+const parseSizeValue = (sizeValue) => {
+  if (!sizeValue) return null;
+  if (typeof sizeValue === 'number') return sizeValue;
+
+  // Check if sizeValue is a range e.g. "35-38"
+  if (sizeValue.includes('-')) {
+    const parts = sizeValue.split('-').map(p => parseFloat(p.trim()));
+    if (parts.length === 2 && !parts.some(isNaN)) {
+      // Return average of the range
+      return (parts[0] + parts[1]) / 2;
+    }
+  }
+
+  // Otherwise, try to parse single float number
+  const parsed = parseFloat(sizeValue);
+  return isNaN(parsed) ? null : parsed;
+};
+
+const getFitTypeAndAlteration = (userValue, sizeValue) => {
+  if (userValue === undefined || sizeValue === undefined)
+    return { fitType: null, alterationRequired: true };
+
+  const user = Number(userValue);
+  const size = parseSizeValue(sizeValue);
+  if (isNaN(user) || size === null)
+    return { fitType: null, alterationRequired: true };
+
+  if (user === size) {
+    return { fitType: 'fitted', alterationRequired: false };
+  } else if (user < size) {
+    return { fitType: 'loose', alterationRequired: true };
+  } else {
+    return { fitType: 'tight', alterationRequired: true };
+  }
+};
+
+// ...existing code...
 export const getMatchingSizes = (
   brand,
   subCategory,
@@ -187,43 +360,110 @@ export const getMatchingSizes = (
   sizeMatchCacheByBrand,
   userBust,
   userWaist,
-  userHip
+  userHip,
+  userSleeves
 ) => {
-  const brandCache = sizeMatchCacheByBrand[brand]
+  const brandCache = sizeMatchCacheByBrand[brand];
+  if (brandCache[subCategory]) return brandCache[subCategory];
 
-  if (brandCache[subCategory]) return brandCache[subCategory]
+  const isJ_Crew = brand === 'J_Crew';
+  const matches = [];
 
-  let match = null
+  for (const { name, numericalSize, numericalValue, measurements } of sizeChart) {
+    let sizePart = name;
+    let sizingType = '';
+    if (isJ_Crew && name.includes('#')) {
+      const [part, type] = name.split('#');
+      sizePart = part;
+      sizingType = type;
+    }
 
-  for (const { measurements, name, numericalSize, numericalValue } of sizeChart) {
-    const { bust, waist, hip } = measurements
+    let bust, waist, hip, sleeves;
+    if (isJ_Crew && sizePart.includes('-')) {
+      const [size1, size2] = sizePart.split('-');
+      const m1 = sizeChart.find(s => s.name === size1)?.measurements || {};
+      const m2 = sizeChart.find(s => s.name === size2)?.measurements || {};
+      const avg = (a, b) => {
+        const n1 = parseFloat(a);
+        const n2 = parseFloat(b);
+        return isNaN(n1) || isNaN(n2) ? '' : ((n1 + n2) / 2).toFixed(1);
+      };
+      bust = avg(m1.bust, m2.bust);
+      waist = avg(m1.waist, m2.waist);
+      hip = avg(m1.hip, m2.hip);
+      sleeves = avg(m1.sleeves, m2.sleeves);
+    } else {
+      ({ bust, waist, hip, sleeves } = measurements || {});
+    }
 
-    if (subCategory === 'tops' || subCategory === 'outerwear' || subCategory === 'dresses') {
-      const bustMatch = isMeasurementInRange(userBust, bust)
-      const waistMatch = isMeasurementInRange(userWaist, waist)
+    let fitType = null;
+    let alterationRequired = true;
 
-      if (bustMatch) {
-        match = { name, numericalSize, numericalValue }
-        break // Prioritize bust, so stop here
-      } else if (waistMatch) {
-        match = { name, numericalSize, numericalValue }
-        break
+    if (['tops', 'outerwear', 'dresses'].includes(subCategory)) {
+      console.log("bust", bust)
+      console.log("userBust", userBust)
+
+      // Priority: bust/chest, then waist, then sleeves
+      const bustFit = getFitTypeAndAlteration(userBust, bust);
+      console.log("bustFit", bustFit)
+      const waistFit = getFitTypeAndAlteration(userWaist, waist);
+      console.log("waistFit", waistFit)
+
+      const sleevesFit = getFitTypeAndAlteration(userSleeves, sleeves);
+
+      // Determine overall fitType and alterationRequired
+      if (bustFit.fitType === 'fitted') {
+        fitType = 'fitted';
+
+        if (waistFit.fitType === 'fitted') {
+          if (isJ_Crew) {
+            // Also check sleeves only if it's J_Crew
+            if (sleevesFit.fitType === 'fitted') {
+              alterationRequired = false;
+            } else {
+              alterationRequired = true;
+            }
+          } else {
+            alterationRequired = false;
+          }
+        } else {
+          alterationRequired = true;
+        }
       }
+      else if (bustFit.fitType === 'loose' || waistFit.fitType === 'loose') {
+        fitType = 'loose';
+        alterationRequired = true;
+      } else if (bustFit.fitType === 'tight' || waistFit.fitType === 'tight') {
+        fitType = 'tight';
+        alterationRequired = true;
+      }
+
+      matches.push({ name, numericalSize, numericalValue, fitType, alterationRequired });
     } else if (subCategory === 'bottoms') {
-      const waistMatch = isMeasurementInRange(userWaist, waist)
-      const hipMatch = isMeasurementInRange(userHip, hip)
+      const waistFit = getFitTypeAndAlteration(userWaist, waist);
+      const hipFit = getFitTypeAndAlteration(userHip, hip);
 
-      if (waistMatch) {
-        match = { name, numericalSize, numericalValue }
-        break // Prioritize waist, so stop here
-      } else if (hipMatch) {
-        match = { name, numericalSize, numericalValue }
-        break
+      if (waistFit.fitType === 'fitted') {
+        if (hipFit.fitType === 'fitted') {
+          fitType = 'fitted';
+          alterationRequired = false;
+        } else {
+          fitType = 'fitted';
+          alterationRequired = true;
+        }
+      } else if (waistFit.fitType === 'loose' || hipFit.fitType === 'loose') {
+        fitType = 'loose';
+        alterationRequired = true;
+      } else if (waistFit.fitType === 'tight' || hipFit.fitType === 'tight') {
+        fitType = 'tight';
+        alterationRequired = true;
       }
+
+      matches.push({ name, numericalSize, numericalValue, fitType, alterationRequired });
     }
   }
 
-  const result = match ? [match] : []
-  brandCache[subCategory] = result
-  return result
-}
+  brandCache[subCategory] = matches;
+  return matches;
+};
+

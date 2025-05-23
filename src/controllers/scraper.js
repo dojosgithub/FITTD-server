@@ -393,7 +393,7 @@ const getEbDenimProductUrlsFromCategory = async (categoryUrl, existingPage = nul
     return []
   }
   try {
-    await autoScroll(page)
+    // await autoScroll(page)
     const products = await extractEbDenimProductsFromPage(page, categoryUrl)
     console.log(`📋 Found ${products.length} products on page ${categoryUrl}`)
     const productsWithDescriptions = await scrapeProductsInParallel(
@@ -402,6 +402,17 @@ const getEbDenimProductUrlsFromCategory = async (categoryUrl, existingPage = nul
       fetchEbDenimProductDescription
     )
     console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
+    const hasNextPage = await page.evaluate(() => {
+      const nextPageLink = document.querySelector('link[rel=next]')
+      return nextPageLink ? nextPageLink.getAttribute('href') : null
+    })
+
+    if (hasNextPage) {
+      const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+      const nextPageProducts = await getEbDenimProductUrlsFromCategory(nextPageUrl, page)
+      return [...productsWithDescriptions, ...nextPageProducts]
+    }
     return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
@@ -640,11 +651,10 @@ const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
         const imgSrc = imgTag?.getAttribute('src') || ''
 
         const product = {
-          name: `${nameElement.textContent.trim()} - ${
-            descElement?.textContent
-              .trim()
-              .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) || ''
-          }`,
+          name: `${nameElement.textContent.trim()} - ${descElement?.textContent
+            .trim()
+            .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) || ''
+            }`,
 
           description: '',
           gender: 'female',
@@ -783,7 +793,7 @@ const getJCrewProductUrlsFromCategory = async (categoryUrl, existingPage = null)
 
     if (hasNextPage) {
       const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+      await new Promise((resolve) => setTimeout(resolve, 6000))
       const nextPageProducts = await getJCrewProductUrlsFromCategory(nextPageUrl, page)
       return [...productsWithDescriptions, ...nextPageProducts]
     }

@@ -11,17 +11,23 @@ dotenv.config()
 export const CONTROLLER_PRODUCT = {
   getByBrandsAndCategories: asyncMiddleware(async (req, res) => {
     const { brand, category, page = 1, limit = 10 } = req.query
+    const userId = req.decoded._id
 
     if (!brand && !category) {
       return res.status(400).json({
         message: "At least one query param ('brand' or 'category') is required.",
       })
     }
+    const user = await UserMeasurement.findOne({ userId }).lean()
 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' })
+    }
+    const gender = user.gender
     const brands = brand?.split(',').map((b) => b.trim()) || []
     const categories = category?.split(',').map((c) => c.trim()) || []
 
-    const aggregationPipeline = aggregateProductsByBrandAndCategory(brands, categories, page, limit)
+    const aggregationPipeline = aggregateProductsByBrandAndCategory(brands, categories, gender, page, limit)
 
     const groupedResults = await Product.aggregate(aggregationPipeline)
 
@@ -48,7 +54,7 @@ export const CONTROLLER_PRODUCT = {
   }),
   getRecommendedProducts: asyncMiddleware(async (req, res) => {
     const BATCH_SIZE = 20 // Number of products to fetch in each database query
-    const { brands, category, PAGE_SIZE = 10 } = req.query
+    const { brands, category, PAGE_SIZE = 10, fitType = 'fitted' } = req.query
     const userId = req.decoded._id
 
     // Parse skip values for each brand
@@ -63,17 +69,7 @@ export const CONTROLLER_PRODUCT = {
     }
 
     // Fetch user measurements
-    const user = await UserMeasurement.findOne(
-      { userId },
-      {
-        'upperBody.bust.value': 1,
-        'upperBody.chest.value': 1,
-        'lowerBody.waist.value': 1,
-        'lowerBody.hip.value': 1,
-        'lowerBody.waist.unit': 1,
-        _id: 0,
-      }
-    ).lean()
+    const user = await UserMeasurement.findOne({ userId }).lean()
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' })
@@ -83,6 +79,9 @@ export const CONTROLLER_PRODUCT = {
     const userWaist = user.lowerBody?.waist?.value
     const userHip = user.lowerBody?.hip?.value
     const unit = user.lowerBody?.waist?.unit
+    const userSleeves = user.upperBody?.sleevesLength?.value
+    const gender = user.gender
+
     // Calculate products per brand - distribute evenly
     const numBrands = brandsArray.length
     const productsPerBrand = Math.ceil(PAGE_SIZE / numBrands)
@@ -136,6 +135,7 @@ export const CONTROLLER_PRODUCT = {
             $match: {
               brand,
               category,
+              gender
             },
           },
           { $skip: currentSkip },
@@ -176,17 +176,36 @@ export const CONTROLLER_PRODUCT = {
             sizeMatchCacheByBrand,
             userBust,
             userWaist,
-            userHip
+            userHip,
+            userSleeves,
+            fitType
           )
-          const sizeSet = new Set(matchingSizes.flatMap(({ name, numericalSize }) => [name, numericalSize]))
+          const filteredSizes = matchingSizes.filter(s => s.fitType === fitType);
+          const sizeSet = new Set(filteredSizes.flatMap(({ name, numericalSize }) => [name, numericalSize]))
 
-          const availableSizes = product.sizes?.filter((s) => sizeSet.has(s.size) && s.inStock)
+          const availableSizes = product.sizes?.filter((s) => sizeSet.has(s.size) && s.inStock);
+
           if (availableSizes?.length) {
+            const alterationRequired = !availableSizes.some(s => {
+              const match = filteredSizes.find(m => m.name === s.size || m.numericalSize === s.size);
+              return match?.alterationRequired === false;
+            });
+
             matchedProducts.push({
               product,
-              matchedSizes: availableSizes.map((s) => s.size),
-            })
+              alterationRequired, // only this single flag returned now
+            });
           }
+
+          //  const sizeSet = new Set(matchingSizes.flatMap(({ name, numericalSize }) => [name, numericalSize]))
+
+          // const availableSizes = product.sizes?.filter((s) => sizeSet.has(s.size) && s.inStock)
+          // if (availableSizes?.length) {
+          //   matchedProducts.push({
+          //     product,
+          //     matchedSizes: availableSizes.map((s) => s.size),
+          //   })
+          // }
 
           if (matchedProducts.length >= productsPerBrand) {
             nextSkipValues[brand] = currentSkip + i + 1
