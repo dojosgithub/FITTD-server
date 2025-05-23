@@ -1,4 +1,5 @@
 // utils.js
+import { Product } from "../models"
 export const aggregateProductsByBrandAndCategory = (brands = [], categories = [], gender = "male", page = 1, limit = 10) => {
   const match = {}
   if (brands.length) match.brand = { $in: brands }
@@ -43,3 +44,40 @@ export const aggregateProductsByBrandAndCategory = (brands = [], categories = []
     },
   ]
 }
+
+
+export const getCategoryCounts = async (categories, brand, ProductModel) => {
+  const matchCriteria = {
+    category: { $in: categories },
+  };
+
+  if (brand) {
+    matchCriteria.brand = brand;  // single brand string, no array
+  }
+
+  const counts = await Product.aggregate([
+    { $match: matchCriteria },
+    {
+      $group: {
+        _id: '$category',
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        category: '$_id',
+        count: 1,
+      },
+    },
+  ]);
+
+  const categoryCounts = {};
+  for (const cat of categories) {
+    const found = counts.find(c => c.category === cat);
+    categoryCounts[cat] = found ? found.count : 0;
+  }
+
+  return categoryCounts;
+}
+

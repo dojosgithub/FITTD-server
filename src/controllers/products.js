@@ -3,12 +3,25 @@ import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
 import { Product, SizeChart, UserMeasurement } from '../models'
 import { asyncMiddleware } from '../middlewares'
-import { determineSubCategory } from '../utils/categoryConfig'
-import { aggregateProductsByBrandAndCategory, getMatchingSizes } from '../utils'
+import { determineSubCategory, getCategoriesName } from '../utils/categoryConfig'
+import { aggregateProductsByBrandAndCategory, getCategoryCounts, getMatchingSizes } from '../utils'
 
 dotenv.config()
 
 export const CONTROLLER_PRODUCT = {
+
+  getCategoryCountsAcrossBrands: asyncMiddleware(async (req, res) => {
+    const categories = getCategoriesName();
+    const brand = req.query.brand; // single brand string or undefined
+
+    const categoryCounts = await getCategoryCounts(categories, brand);
+
+    return res.status(200).json({
+      data: categoryCounts,
+    });
+  }),
+
+
   getByBrandsAndCategories: asyncMiddleware(async (req, res) => {
     const { brand, category, page = 1, limit = 10 } = req.query
     const userId = req.decoded._id
@@ -52,6 +65,7 @@ export const CONTROLLER_PRODUCT = {
       data: groupedByBrand,
     })
   }),
+
   getRecommendedProducts: asyncMiddleware(async (req, res) => {
     const BATCH_SIZE = 20 // Number of products to fetch in each database query
     const { brands, category, PAGE_SIZE = 10, fitType = 'fitted' } = req.query
