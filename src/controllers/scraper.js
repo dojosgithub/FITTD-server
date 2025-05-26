@@ -1405,13 +1405,13 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getJCrewProducts: asyncMiddleware(async (req, res) => {
-    res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
-    })
+    // res.status(StatusCodes.ACCEPTED).json({
+    //   message: 'Scraping started. Run Get All Products Api to see the results',
+    // })
     try {
       // const products = await getHouseOfCbProductUrlsFromCategory(categoryUrl)
       const categories = [
-        { type: 'men', url: 'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=9' },
+        { type: 'men', url: 'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=1000' },
         { type: 'women', url: 'https://www.jcrew.com/plp/womens?Npge=1&Nrpp=9' },
       ]
 
@@ -1447,11 +1447,11 @@ export const CONTROLLER_SCRAPER = {
       // }
 
       const newProductCollection = await updateOrCreateProductCollection('J_Crew', groupedByType)
-      // res.status(StatusCodes.OK).json({
-      //   data: newProductCollection,
-      //   // results: results.length,
-      //   message: 'Products Fetched and Saved successfully',
-      // })
+      res.status(StatusCodes.OK).json({
+        data: newProductCollection,
+        // results: results.length,
+        message: 'Products Fetched and Saved successfully',
+      })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
