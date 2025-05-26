@@ -1,6 +1,12 @@
 // utils.js
-import { Product } from "../models"
-export const aggregateProductsByBrandAndCategory = (brands = [], categories = [], gender = "male", page = 1, limit = 10) => {
+import { Product, ProductMetrics } from '../models'
+export const aggregateProductsByBrandAndCategory = (
+  brands = [],
+  categories = [],
+  gender = 'male',
+  page = 1,
+  limit = 10
+) => {
   const match = {}
   if (brands.length) match.brand = { $in: brands }
   if (categories.length) match.category = { $in: categories }
@@ -45,14 +51,13 @@ export const aggregateProductsByBrandAndCategory = (brands = [], categories = []
   ]
 }
 
-
 export const getCategoryCounts = async (categories, brand, ProductModel) => {
   const matchCriteria = {
     category: { $in: categories },
-  };
+  }
 
   if (brand) {
-    matchCriteria.brand = brand;  // single brand string, no array
+    matchCriteria.brand = brand // single brand string, no array
   }
 
   const counts = await Product.aggregate([
@@ -70,14 +75,36 @@ export const getCategoryCounts = async (categories, brand, ProductModel) => {
         count: 1,
       },
     },
-  ]);
+  ])
 
-  const categoryCounts = {};
+  const categoryCounts = {}
   for (const cat of categories) {
-    const found = counts.find(c => c.category === cat);
-    categoryCounts[cat] = found ? found.count : 0;
+    const found = counts.find((c) => c.category === cat)
+    categoryCounts[cat] = found ? found.count : 0
   }
 
-  return categoryCounts;
+  return categoryCounts
 }
 
+export const getTrendingProducts = async (limit = 4) => {
+  return ProductMetrics.aggregate([
+    { $sort: { clickCount: -1 } },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: 'products', // MongoDB collection name for products
+        localField: 'productId',
+        foreignField: '_id',
+        as: 'product',
+      },
+    },
+    { $unwind: '$product' },
+    {
+      $project: {
+        _id: 0,
+        clickCount: 1,
+        product: 1,
+      },
+    },
+  ])
+}

@@ -224,7 +224,7 @@ const scrapeProductsInParallel = async (products, browser, fetchFunction) => {
 
 const fetchProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
 
     // Wait for either description selector to appear
     await page.waitForFunction(
@@ -234,7 +234,7 @@ const fetchProductDescription = async (url, page) => {
           document.querySelector('.collapsible-content__inner.rte')
         )
       },
-      { timeout: 60000 }
+      { timeout: 120000 }
     )
 
     const getDescription = () => {
@@ -346,7 +346,7 @@ const extractProductsFromPage = async (page, baseUrl) => {
 
 const fetchEbDenimProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
 
     // Wait for either description selector to appear
     await page.waitForFunction(
@@ -355,7 +355,7 @@ const fetchEbDenimProductDescription = async (url, page) => {
           document.querySelector('.cc-accordion-item__content') || document.querySelector('.select.original-selector')
         )
       },
-      { timeout: 60000 }
+      { timeout: 120000 }
     )
 
     const getDescription = () => {
@@ -523,14 +523,14 @@ const transformProducts = (products) => {
 
 const fetchHouseOfCBProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
 
     // Wait for either description selector to appear
     await page.waitForFunction(
       () => {
         return document.querySelector('div.font-gotham-book') // Wait for the first div with the description
       },
-      { timeout: 60000 }
+      { timeout: 120000 }
     )
 
     // Fetch description and sizes in parallel
@@ -651,10 +651,12 @@ const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
         const imgSrc = imgTag?.getAttribute('src') || ''
 
         const product = {
-          name: `${nameElement.textContent.trim()} - ${descElement?.textContent
-            .trim()
-            .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) || ''
-            }`,
+          name: `${nameElement.textContent.trim()} - 
+          ${
+            descElement?.textContent
+              .trim()
+              .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) || ''
+          }`,
 
           description: '',
           gender: 'female',
@@ -679,7 +681,7 @@ const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
 
 const fetchJCrewProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 })
 
     // 1️⃣ Extract productId from URL
     const parsedUrl = new URL(url)
@@ -786,17 +788,17 @@ const getJCrewProductUrlsFromCategory = async (categoryUrl, existingPage = null)
     )
 
     console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    const hasNextPage = await page.evaluate(() => {
-      const nextPageLink = document.querySelector('.ArrayPagination__next___lrjgC')
-      return nextPageLink ? nextPageLink.getAttribute('to') : null
-    })
+    // const hasNextPage = await page.evaluate(() => {
+    //   const nextPageLink = document.querySelector('.ArrayPagination__next___lrjgC')
+    //   return nextPageLink ? nextPageLink.getAttribute('to') : null
+    // })
 
-    if (hasNextPage) {
-      const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
-      await new Promise((resolve) => setTimeout(resolve, 6000))
-      const nextPageProducts = await getJCrewProductUrlsFromCategory(nextPageUrl, page)
-      return [...productsWithDescriptions, ...nextPageProducts]
-    }
+    // if (hasNextPage) {
+    //   const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
+    //   await new Promise((resolve) => setTimeout(resolve, 6000))
+    //   const nextPageProducts = await getJCrewProductUrlsFromCategory(nextPageUrl, page)
+    //   return [...productsWithDescriptions, ...nextPageProducts]
+    // }
     return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
@@ -844,13 +846,13 @@ const extractJCrewProductsFromPage = async (page, baseUrl) => {
 
 const fetchLuluLemonProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
 
     await page.waitForFunction(
       () => {
         return document.querySelector('[data-lll-pl="size-tile"]') // Wait for the first div with the description
       },
-      { timeout: 60000 }
+      { timeout: 120000 }
     )
 
     const [primaryImageUrl, sizes, description, reviewCount, rating] = await Promise.all([
@@ -911,11 +913,7 @@ const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = n
   if (!page) {
     return []
   }
-  page.on('console', (msg) => {
-    if (msg.type() === 'log') {
-      console.log(`🧠 BROWSER LOG: ${msg.text()}`)
-    }
-  })
+
   try {
     await loadMoreLuluLemonProducts(page, selector, categoryUrl)
     const products = await extractLuluLemonProductsFromPage(page, categoryUrl)
@@ -971,13 +969,13 @@ const extractLuluLemonProductsFromPage = async (page, baseUrl) => {
 
 const fetchTheReformationProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
 
     await page.waitForFunction(
       () => {
         return document.querySelector('.pdp_fit-details') || document.querySelector('.product-attribute__contents')
       },
-      { timeout: 60000 }
+      { timeout: 120000 }
     )
 
     const { description, sizes, images } = await page.evaluate(() => {
@@ -1126,7 +1124,7 @@ const extractTheReformationProductsFromPage = async (page, baseUrl) => {
 
 const fetchSelfPotraitProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
 
     // Wait for either description to load
     await page.waitForFunction(
@@ -1405,13 +1403,13 @@ export const CONTROLLER_SCRAPER = {
   }), //Categorization Done
 
   getJCrewProducts: asyncMiddleware(async (req, res) => {
-    // res.status(StatusCodes.ACCEPTED).json({
-    //   message: 'Scraping started. Run Get All Products Api to see the results',
-    // })
+    res.status(StatusCodes.ACCEPTED).json({
+      message: 'Scraping started. Run Get All Products Api to see the results',
+    })
     try {
       // const products = await getHouseOfCbProductUrlsFromCategory(categoryUrl)
       const categories = [
-        { type: 'men', url: 'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=1000' },
+        { type: 'men', url: 'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=9' },
         { type: 'women', url: 'https://www.jcrew.com/plp/womens?Npge=1&Nrpp=9' },
       ]
 
@@ -1429,6 +1427,7 @@ export const CONTROLLER_SCRAPER = {
           groupedByType[cat].push(product)
         }
       }
+
       // const scrapeCategory = async (category) => {
       //   const products = await getJCrewProductUrlsFromCategory(category.url)
       //   const gender = category.type === 'men' ? 'male' : 'female'
@@ -1447,11 +1446,11 @@ export const CONTROLLER_SCRAPER = {
       // }
 
       const newProductCollection = await updateOrCreateProductCollection('J_Crew', groupedByType)
-      res.status(StatusCodes.OK).json({
-        data: newProductCollection,
-        // results: results.length,
-        message: 'Products Fetched and Saved successfully',
-      })
+      // res.status(StatusCodes.OK).json({
+      //   data: newProductCollection,
+      //   // results: results.length,
+      //   message: 'Products Fetched and Saved successfully',
+      // })
     } finally {
       // Clean up the browser instance
       if (globalBrowser) {
