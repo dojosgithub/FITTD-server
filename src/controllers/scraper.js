@@ -788,17 +788,17 @@ const getJCrewProductUrlsFromCategory = async (categoryUrl, existingPage = null)
     )
 
     console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
-    // const hasNextPage = await page.evaluate(() => {
-    //   const nextPageLink = document.querySelector('.ArrayPagination__next___lrjgC')
-    //   return nextPageLink ? nextPageLink.getAttribute('to') : null
-    // })
+    const hasNextPage = await page.evaluate(() => {
+      const nextPageLink = document.querySelector('.ArrayPagination__next___lrjgC')
+      return nextPageLink ? nextPageLink.getAttribute('to') : null
+    })
 
-    // if (hasNextPage) {
-    //   const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
-    //   await new Promise((resolve) => setTimeout(resolve, 6000))
-    //   const nextPageProducts = await getJCrewProductUrlsFromCategory(nextPageUrl, page)
-    //   return [...productsWithDescriptions, ...nextPageProducts]
-    // }
+    if (hasNextPage) {
+      const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
+      await new Promise((resolve) => setTimeout(resolve, 6000))
+      const nextPageProducts = await getJCrewProductUrlsFromCategory(nextPageUrl, page)
+      return [...productsWithDescriptions, ...nextPageProducts]
+    }
     return productsWithDescriptions
   } catch (error) {
     console.error(`Error scraping category ${categoryUrl}:`, error)
