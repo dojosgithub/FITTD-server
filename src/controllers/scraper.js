@@ -682,7 +682,7 @@ const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
 
 const fetchJCrewProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 240000 })
 
     // 1️⃣ Extract productId from URL
     const parsedUrl = new URL(url)
@@ -820,8 +820,11 @@ const extractJCrewProductsFromPage = async (page, baseUrl) => {
         const absoluteUrl = new URL(relativeUrl, baseUrl).toString()
         // Extract rating
         const wasPrice = block.querySelector('[data-testid="strikethrough"]')?.textContent.trim()
-        const nowPrice = block.querySelector('.is-price')?.textContent.trim().replace('Sale Price: ', '')
-        const price = nowPrice || wasPrice || ''
+        const nowPrice = block.querySelector('.is-price')?.textContent.trim()
+        let price = nowPrice || wasPrice || ''
+        if (/^Sale Price:\s*(from\s*)?/i.test(price)) {
+          price = price.replace(/^Sale Price:\s*(from\s*)?/i, '').trim()
+        }
         const product = {
           name: titleElement.textContent.trim(),
           description: '',
