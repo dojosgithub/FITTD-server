@@ -1468,7 +1468,9 @@ export const CONTROLLER_SCRAPER = {
     try {
       const categories = [
         { type: 'men', url: 'https://shop.lululemon.com/c/men-clothes/n1oxc7' },
+        // { type: 'men', url: 'https://shop.lululemon.com/c/men-bestsellers/n1nrqwznskl' },
         { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
+        // { type: 'women', url: 'https://shop.lululemon.com/c/women-bestsellers/n16o10znskl' },
       ]
 
       let products = []

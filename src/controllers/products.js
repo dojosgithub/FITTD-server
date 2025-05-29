@@ -122,16 +122,6 @@ function getBestFitForMeasurement(userMeasurement, sizeMeasurement, fitType) {
   if (measurementValues.length === 0) return { fits: false, score: Infinity }
 
   switch (fitType) {
-    // case 'fitted':
-    //   // For fitted, look for exact match only
-    //   if (measurementValues.includes(userMeasurement)) {
-    //     return { fits: true, score: 0, matchType: 'fitted' };
-    //   }
-    //   // Find closest value for scoring
-    //   const closestFitted = measurementValues.reduce((closest, val) =>
-    //     Math.abs(val - userMeasurement) < Math.abs(closest - userMeasurement) ? val : closest
-    //   );
-    //   return { fits: false, score: Math.abs(closestFitted - userMeasurement), matchType: 'fitted' };
     case 'fitted':
       // For fitted, look for exact match only
       if (measurementValues.includes(userMeasurement)) {
@@ -171,30 +161,29 @@ function getBestFitForMeasurement(userMeasurement, sizeMeasurement, fitType) {
 }
 
 // Enhanced function to find best fit based on bust measurements
-function findBestFitByBust(sizeChart, userMeasurements, fitType) {
-  const { bust: userBust } = userMeasurements
+function findBestFit(sizeChart, userMeasurements, fitType, measurementType) {
+  const userMeasurement = measurementType === 'bust' ? userMeasurements.bust : userMeasurements.waist
 
-  if (!userBust || !sizeChart) return null
-
+  if (!userMeasurement || !sizeChart) return null
   // Convert size chart to array and sort by bust measurement
   const sortedSizes = sizeChart
     .map((size) => ({
       name: size.name,
       measurements: size.measurements,
-      bustValue: getPrimaryMeasurement(size.measurements.bust),
+      measurementValue: getPrimaryMeasurement(size.measurements[measurementType]),
       numericalSize: size.numericalSize,
       numericalValue: size.numericalValue,
     }))
-    .filter((size) => size.measurements?.bust) // ensure bust exists
-    .sort((a, b) => a.bustValue - b.bustValue)
+    .filter((size) => size.measurements?.[measurementType]) // ensure bust exists
+    .sort((a, b) => a.measurementValue - b.measurementValue)
 
   // Find best fit based on fit type
   let bestFit = null
   let bestScore = Infinity
   const selectedLabels = new Set()
   for (const size of sortedSizes) {
-    const bustMeasurement = size.measurements.bust
-    const fitResult = getBestFitForMeasurement(userBust, bustMeasurement, fitType)
+    const measurement = size.measurements[measurementType]
+    const fitResult = getBestFitForMeasurement(userMeasurement, measurement, fitType)
     // Prioritize exact fits, then best scores
     if (fitResult.fits && fitResult.score === 0) {
       // Perfect match found
@@ -202,8 +191,6 @@ function findBestFitByBust(sizeChart, userMeasurements, fitType) {
         name: size.name,
         numericalSize: size.numericalSize,
         numericalValue: size.numericalValue,
-        measurements: size.measurements,
-        fitMatch: fitType,
       }
     }
 
@@ -220,9 +207,6 @@ function findBestFitByBust(sizeChart, userMeasurements, fitType) {
           name: size.name,
           numericalSize: size.numericalSize,
           numericalValue: size.numericalValue,
-          measurements: size.measurements,
-          fitMatch: fitType,
-          difference: fitResult.score,
         }
         selectedLabels.add(size.name)
       }
@@ -234,9 +218,6 @@ function findBestFitByBust(sizeChart, userMeasurements, fitType) {
           name: size.name,
           numericalSize: size.numericalSize,
           numericalValue: size.numericalValue,
-          measurements: size.measurements,
-          fitMatch: fitType,
-          difference: fitResult.score,
         }
         selectedLabels.add(size.name)
       }
@@ -722,7 +703,7 @@ export const CONTROLLER_PRODUCT = {
   // }),
 
   searchProducts: asyncMiddleware(async (req, res) => {
-    const { keyword, fitType = 'fitted' } = req.query
+    const { keyword, fitType = 'fitted', category } = req.query
     const userId = req.decoded._id
 
     // Validate parameters
@@ -742,7 +723,7 @@ export const CONTROLLER_PRODUCT = {
     const { unit, gender } = userMeasurements
 
     // Search for matching products
-    const matchingProducts = await findProductsByKeyword(keyword, gender)
+    const matchingProducts = await findProductsByKeyword(keyword, gender, category)
 
     if (!matchingProducts.length) {
       return res.status(StatusCodes.OK).json({ data: [], total: 0 })
@@ -841,8 +822,11 @@ export const CONTROLLER_PRODUCT = {
     const subCategory = category === 'denim' ? determineSubCategory(category, name) : category
 
     const isTopsCategory = ['tops', 'outerwear', 'dresses'].includes(subCategory)
-    const categoryKey = isTopsCategory ? 'tops' : 'bottoms'
-
+    let categoryKey = isTopsCategory ? 'tops' : 'bottoms'
+    const isJCrew = brand === 'J_Crew'
+    if (isJCrew && gender === 'female' && category === 'denim') {
+      categoryKey = 'denim'
+    }
     // Fetch size chart for brand
     const sizeChartDoc = await SizeChart.findOne({ brand }, { brand: 1, [`sizeChart.${unit}`]: 1 }).lean()
 
@@ -856,33 +840,20 @@ export const CONTROLLER_PRODUCT = {
         message: `No size chart found for brand ${brand} and unit ${unit}.`,
       })
     }
-
+    const measurementType = isTopsCategory ? 'bust' : 'waist'
     // Use the enhanced bust-based size matching for tops
     let bestFit
-    if (isTopsCategory && userBust) {
-      bestFit = findBestFitByBust(
-        sizeChart,
-        {
-          bust: userBust,
-          waist: userWaist,
-          hip: userHip,
-          sleeves: userSleeves,
-        },
-        fitType
-      )
-    } else {
-      // Fall back to original function for bottoms or when bust is not available
-      bestFit = findGreatFitSize(
-        sizeChart,
-        {
-          bust: userBust,
-          waist: userWaist,
-          hip: userHip,
-          sleeves: userSleeves,
-        },
-        fitType
-      )
-    }
+    bestFit = findBestFit(
+      sizeChart,
+      {
+        bust: userBust,
+        waist: userWaist,
+        hip: userHip,
+        sleeves: userSleeves,
+      },
+      fitType,
+      measurementType
+    )
 
     if (!bestFit) {
       return res.status(StatusCodes.OK).json({
@@ -893,24 +864,9 @@ export const CONTROLLER_PRODUCT = {
       })
     }
 
-    // Check if recommended size is available in product
-    const isSizeAvailable = product.sizes?.some((s) => {
-      const sizeToCheck = bestFit.name || bestFit.numericalSize || bestFit.numericalValue
-      return (
-        (s.size === sizeToCheck ||
-          s.size === bestFit.name ||
-          s.size === bestFit.numericalSize ||
-          s.size === bestFit.numericalValue) &&
-        s.inStock
-      )
-    })
-
     return res.status(StatusCodes.OK).json({
       product,
       recommendedSize: bestFit.name || bestFit.numericalSize || bestFit.numericalValue || null,
-      measurements: bestFit.measurements || null,
-      isSizeAvailable,
-      difference: bestFit.difference || 0,
       similarProducts,
     })
   }),

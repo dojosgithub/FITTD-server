@@ -438,10 +438,16 @@ export const processAllSearchProducts = (
 }
 
 // Function to search for products by keyword
-export const findProductsByKeyword = async (keyword, gender) => {
-  return await Product.find({
+export const findProductsByKeyword = async (keyword, gender, category) => {
+  const query = {
     name: { $regex: keyword, $options: 'i' },
     gender,
     brand: { $ne: 'Sabo_Skirt' },
-  }).lean()
+  }
+
+  if (category) {
+    query.category = category
+  }
+
+  return await Product.find(query).lean()
 }

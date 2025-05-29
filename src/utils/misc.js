@@ -341,7 +341,6 @@ export const getMatchingSizes = (
         hip: hipFit.difference,
         hipDirection: hipFit.direction,
       }
-      console.log('attributeDifferences', attributeDifferences)
       if (waistFit.fitType === 'fitted') {
         if (hipFit.fitType === 'fitted') {
           fitType = 'fitted'

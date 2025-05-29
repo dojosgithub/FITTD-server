@@ -119,7 +119,7 @@ export const CONTROLLER_AUTH = {
     // const user = await User.findOne({
     //   $or: [{ email }, { mobile }],
     // }).select('+password')
-    const user = await User.findOne({ email }).select('+password').populate('measurements').populate('wishlist')
+    const user = await User.findOne({ email }).select('+password').populate('measurements')
 
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({
