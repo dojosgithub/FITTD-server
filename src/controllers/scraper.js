@@ -583,22 +583,22 @@ const fetchHouseOfCBProductDescription = async (url, page) => {
 
     // Format the description HTML if needed
     const formattedHTML = normalizeHtml(description)
-    const secondaryImages = await page.evaluate(() => {
+    const imagesData = await page.evaluate(() => {
       const gridContainer = document.querySelector('div.grid.grid-cols-2')
-      if (!gridContainer) return []
+      if (!gridContainer) return { primary: null, secondary: [] }
 
       const allImages = Array.from(gridContainer.querySelectorAll('img'))
 
-      // Ignore the first image and extract the rest
-      const imageSources = allImages.slice(1).map((img) => img.src)
+      const primary = allImages.length > 0 ? allImages[0].src : null
+      const secondary = allImages.length > 1 ? allImages.slice(1).map((img) => img.src) : []
 
-      return imageSources
+      return { primary, secondary }
     })
 
     return {
       description: formattedHTML || '',
       sizes: sizes || [],
-      image: { secondary: secondaryImages },
+      image: imagesData,
     }
   } catch (err) {
     console.error(`❌ Failed to fetch description from ${url}: ${err.message}`)
@@ -647,8 +647,8 @@ const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
         const absoluteUrl = new URL(relativeUrl, baseUrl).toString()
 
         // Image handling
-        const imgTag = linkElement.querySelector('img')
-        const imgSrc = imgTag?.getAttribute('src') || ''
+        // const imgTag = linkElement.querySelector('img')
+        // const imgSrc = imgTag?.getAttribute('src') || ''
 
         const product = {
           name: `${nameElement.textContent.trim()} - 
@@ -663,7 +663,8 @@ const extractHouseOfCBProductsFromPage = async (page, baseUrl) => {
           url: absoluteUrl,
           price: priceText,
           image: {
-            primary: imgSrc.startsWith('http') ? imgSrc : new URL(imgSrc, baseUrl).toString(),
+            // primary: imgSrc.startsWith('http') ? imgSrc : new URL(imgSrc, baseUrl).toString(),
+            primary: '',
             secondary: [],
           },
           sizes: [],

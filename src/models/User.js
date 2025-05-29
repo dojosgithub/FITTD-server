@@ -27,9 +27,8 @@ export const userSchema = new Schema(
     },
     image: { type: String, default: null },
     isVerified: { type: Boolean, default: false },
-    accountType: { type: String, default: 'FITTD-Account' },
+    accountType: { type: String, default: 'FITTD' },
     measurements: { type: mongoose.Schema.Types.ObjectId, ref: 'UserMeasurement', default: null },
-    wishlist: [{ type: Schema.Types.ObjectId, ref: 'UserWishlist', default: [] }],
   },
   { versionKey: false, timestamps: true }
 )

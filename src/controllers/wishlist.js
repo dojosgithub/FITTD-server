@@ -6,14 +6,6 @@ import { asyncMiddleware } from '../middlewares'
 
 dotenv.config()
 
-// * Models
-
-// * Middlewares
-
-// * Services
-
-// * Utilities
-
 export const CONTROLLER_WISHLIST = {
   // Add to Wishlist
   addWishlist: asyncMiddleware(async (req, res) => {
@@ -39,7 +31,6 @@ export const CONTROLLER_WISHLIST = {
       message: 'Added to wishlist',
     })
   }),
-
   // Remove from Wishlist
   removeWishlist: asyncMiddleware(async (req, res) => {
     const { _id: userId } = req.decoded
@@ -57,12 +48,14 @@ export const CONTROLLER_WISHLIST = {
 
     return res.status(StatusCodes.OK).json({ message: 'Removed from wishlist' })
   }),
-
   // Get all wishlist items for user
   getUserWishlist: asyncMiddleware(async (req, res) => {
     const { _id: userId } = req.decoded
 
-    const items = await UserWishlist.find({ userId })
+    const items = await UserWishlist.find({ userId }).populate({
+      path: 'productId',
+      select: '_id image.primary name price', // 👈 Only these fields
+    })
 
     return res.status(StatusCodes.OK).json({ data: items })
   }),

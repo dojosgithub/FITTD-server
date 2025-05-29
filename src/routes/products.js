@@ -17,5 +17,6 @@ router.post('/migrate', Authenticate(), CONTROLLER_PRODUCT.migrateProducts)
 router.get('/search', Authenticate(), CONTROLLER_PRODUCT.searchProducts)
 router.post('/click', Authenticate(), CONTROLLER_PRODUCT.clickProduct)
 router.get('/trending', Authenticate(), CONTROLLER_PRODUCT.trendingProducts)
+router.get('/suggestion', Authenticate(), CONTROLLER_PRODUCT.getSearchSuggestions)
 
 export default router

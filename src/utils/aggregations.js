@@ -1,5 +1,57 @@
 // utils.js
 import { Product, ProductMetrics } from '../models'
+
+// export const aggregateProductsByBrandAndCategory = (
+//   brands = [],
+//   categories = [],
+//   gender = 'male',
+//   page = 1,
+//   limit = 10
+// ) => {
+//   const match = {}
+//   if (brands.length) match.brand = { $in: brands }
+//   if (categories.length) match.category = { $in: categories }
+//   if (gender) match.gender = gender
+
+//   const ITEMS_PER_GROUP = Number(limit)
+//   const skip = (Number(page) - 1) * ITEMS_PER_GROUP
+
+//   return [
+//     { $match: match },
+//     {
+//       $group: {
+//         _id: { brand: '$brand', category: '$category' },
+//         products: { $push: '$$ROOT' },
+//       },
+//     },
+//     {
+//       $project: {
+//         brand: '$_id.brand',
+//         category: '$_id.category',
+//         products: { $slice: ['$products', skip, ITEMS_PER_GROUP] },
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: '$brand',
+//         categories: {
+//           $push: {
+//             k: '$category',
+//             v: '$products',
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         _id: 0,
+//         brand: '$_id',
+//         categories: { $arrayToObject: '$categories' },
+//       },
+//     },
+//   ]
+// }
+
 export const aggregateProductsByBrandAndCategory = (
   brands = [],
   categories = [],
@@ -17,35 +69,28 @@ export const aggregateProductsByBrandAndCategory = (
 
   return [
     { $match: match },
-    {
-      $group: {
-        _id: { brand: '$brand', category: '$category' },
-        products: { $push: '$$ROOT' },
-      },
-    },
+    // Add this $project stage to include only needed fields
     {
       $project: {
-        brand: '$_id.brand',
-        category: '$_id.category',
-        products: { $slice: ['$products', skip, ITEMS_PER_GROUP] },
+        _id: 1,
+        name: 1,
+        price: 1,
+        'image.primary': 1,
+        brand: 1,
+        category: 1,
       },
     },
     {
       $group: {
-        _id: '$brand',
-        categories: {
-          $push: {
-            k: '$category',
-            v: '$products',
-          },
-        },
+        _id: '$category',
+        products: { $push: '$$ROOT' }, // products will contain only the projected fields now
       },
     },
     {
       $project: {
         _id: 0,
-        brand: '$_id',
-        categories: { $arrayToObject: '$categories' },
+        category: '$_id',
+        products: { $slice: ['$products', skip, ITEMS_PER_GROUP] },
       },
     },
   ]
@@ -86,10 +131,8 @@ export const getCategoryCounts = async (categories, brand, ProductModel) => {
   return categoryCounts
 }
 
-export const getTrendingProducts = async (limit = 4) => {
-  return ProductMetrics.aggregate([
-    { $sort: { clickCount: -1 } },
-    { $limit: limit },
+export const getTrendingProducts = async (limit = 4, wishlistSet, gender) => {
+  const trending = await ProductMetrics.aggregate([
     {
       $lookup: {
         from: 'products', // MongoDB collection name for products
@@ -100,11 +143,55 @@ export const getTrendingProducts = async (limit = 4) => {
     },
     { $unwind: '$product' },
     {
+      $match: {
+        'product.gender': gender,
+      },
+    },
+    { $sort: { clickCount: -1 } },
+    { $limit: limit },
+    {
       $project: {
-        _id: 0,
         clickCount: 1,
-        product: 1,
+        _id: '$product._id',
+        name: '$product.name',
+        price: '$product.price',
+        image: { primary: '$product.image.primary' },
       },
     },
   ])
+  return trending.map((item) => ({
+    _id: item._id,
+    name: item.name,
+    price: item.price,
+    image: item.image,
+    clickCount: item.clickCount,
+    isWishlist: wishlistSet.has(item._id.toString()),
+  }))
+}
+
+export const getSimilarProducts = async (product) => {
+  if (!product || !product._id || !product.category || !product.brand || !product.gender) {
+    throw new Error('Invalid product object passed to getSimilarProducts.')
+  }
+
+  const similarProducts = await Product.aggregate([
+    {
+      $match: {
+        _id: { $ne: product._id },
+        category: product.category,
+        brand: product.brand,
+        gender: product.gender,
+      },
+    },
+    { $sample: { size: 4 } },
+    {
+      $project: {
+        name: 1,
+        price: 1,
+        primaryImage: '$image.primary', // adjust if using image array
+      },
+    },
+  ])
+
+  return similarProducts
 }

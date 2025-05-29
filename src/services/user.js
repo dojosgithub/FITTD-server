@@ -8,15 +8,6 @@ import Email from '../utils/email'
 import { OAuth2Client } from 'google-auth-library'
 import { getCategoriesName } from '../utils'
 
-// * Configs
-// import { getCognitoClient } from '../config/aws'
-
-// * Utilities
-
-// import TenantDB from '../utils/tenantDB'
-
-// * Services
-
 export const generateToken = (payload) =>
   new Promise((resolve, reject) => {
     const token = jwt.sign(payload, process.env.USER_ROLE_JWT_SECRET_KEY, { expiresIn: '9999 years' })
@@ -67,7 +58,7 @@ export const signupOAuthUser = async (signupUserData, fcmToken) => {
     email,
     image: picture,
     name: fullName,
-    accountType: 'Google-Account',
+    accountType: 'Google',
     isVerified: true,
     // fcmToken,
   })
@@ -96,42 +87,6 @@ export const signinOAuthUser = async (user) => {
     },
   }
 }
-
-// export const updateOrCreateProductCollection = async (collectionName, groupedByType) => {
-//   const formattedData = {
-//     [collectionName]: {
-//       outerwear: groupedByType.outerwear || [],
-//       denim: groupedByType.denim || [],
-//       tops: groupedByType.tops || [],
-//       bottoms: groupedByType.bottoms || [],
-//       dresses: groupedByType.dresses || [],
-//       accessories: groupedByType.accessories || [],
-//       footwear: groupedByType.footwear || [],
-//     },
-//   }
-//   // Find the existing product collection
-//   const existingProductCollection = await Product.findOne({})
-
-//   let newProductCollection
-//   if (existingProductCollection) {
-//     // If product collection exists, update the collection with the new data
-//     for (const [category, productsInCategory] of Object.entries(formattedData[collectionName])) {
-//       newProductCollection = await Product.updateOne(
-//         { _id: existingProductCollection._id },
-//         { $set: { [`products.${collectionName}.${category}`]: productsInCategory } }
-//       )
-//     }
-//     newProductCollection = await Product.findOne({ _id: existingProductCollection._id })
-//   } else {
-//     // If no product collection exists, create a new one
-//     newProductCollection = new Product({
-//       products: formattedData,
-//     })
-//     await newProductCollection.save()
-//   }
-
-//   return newProductCollection // Return the updated or created product collection
-// }
 
 export const updateOrCreateProductCollection = async (collectionName, groupedByType) => {
   const categories = getCategoriesName()
