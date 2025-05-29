@@ -225,6 +225,7 @@ export const CONTROLLER_PRODUCT = {
     const totalCount = await Product.countDocuments({
       ...(brands.length && { brand: { $in: brands } }),
       ...(categories.length && { category: { $in: categories } }),
+      gender,
     })
     return res.status(200).json({
       results: totalCount,
