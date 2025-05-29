@@ -28,62 +28,6 @@ import {
 } from '../utils'
 
 dotenv.config()
-function findGreatFitSize(productSizes, userMeasurements, fitType) {
-  const { bust, waist, hip, sleeves } = userMeasurements
-
-  // First sort sizes by measurements to establish size order
-  const sortedSizes = productSizes
-    .filter((size) => size.measurements && size.measurements.bust != null)
-    .sort((a, b) => {
-      // Parse measurements to numbers for comparison
-      const bustA = parseFloat(a.measurements.bust)
-      const bustB = parseFloat(b.measurements.bust)
-      return bustA - bustB
-    })
-
-  if (sortedSizes.length === 0) return null
-
-  // Find the index of the size that matches user's measurements
-  let matchingIndex = sortedSizes.findIndex((sizeObj) => {
-    const measurements = sizeObj.measurements
-    const bustMatch = compareBaseMeasurement(measurements.bust, bust)
-    const waistMatch = compareBaseMeasurement(measurements.waist, waist)
-
-    // For tops/dresses, prioritize bust match
-    return bustMatch && (waistMatch || !waist)
-  })
-
-  if (matchingIndex === -1) return null
-
-  // Adjust the size based on fitType
-  switch (fitType) {
-    case 'fitted':
-      return sortedSizes[matchingIndex]
-    case 'loose':
-      // Return next larger size if available
-      return sortedSizes[matchingIndex + 1] || sortedSizes[matchingIndex]
-    case 'tight':
-      // Return next smaller size if available
-      return sortedSizes[matchingIndex - 1] || sortedSizes[matchingIndex]
-    default:
-      return sortedSizes[matchingIndex]
-  }
-}
-
-// Helper function to compare measurements accounting for ranges
-function compareBaseMeasurement(productMeasurement, userMeasurement) {
-  if (!productMeasurement || !userMeasurement) return false
-
-  // Handle range measurements (e.g., "35-36")
-  if (typeof productMeasurement === 'string' && productMeasurement.includes('-')) {
-    const [min, max] = productMeasurement.split('-').map(Number)
-    return userMeasurement >= min && userMeasurement <= max
-  }
-
-  // Handle single measurements
-  const measurement = parseFloat(productMeasurement)
-  return Math.abs(measurement - userMeasurement) <= 0 // Allow 0.5 unit tolerance
-}
 
 function parseMeasurementRange(measurement) {
   if (!measurement) return []
@@ -282,7 +226,6 @@ export const CONTROLLER_PRODUCT = {
       ...(brands.length && { brand: { $in: brands } }),
       ...(categories.length && { category: { $in: categories } }),
     })
-
     return res.status(200).json({
       results: totalCount,
       data: groupedByCategory,

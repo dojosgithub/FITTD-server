@@ -523,14 +523,14 @@ const transformProducts = (products) => {
 
 const fetchHouseOfCBProductDescription = async (url, page) => {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 240000 })
 
     // Wait for either description selector to appear
     await page.waitForFunction(
       () => {
         return document.querySelector('div.font-gotham-book') // Wait for the first div with the description
       },
-      { timeout: 120000 }
+      { timeout: 240000 }
     )
 
     // Fetch description and sizes in parallel
@@ -1467,10 +1467,10 @@ export const CONTROLLER_SCRAPER = {
     })
     try {
       const categories = [
-        { type: 'men', url: 'https://shop.lululemon.com/c/men-clothes/n1oxc7' },
-        // { type: 'men', url: 'https://shop.lululemon.com/c/men-bestsellers/n1nrqwznskl' },
-        { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
-        // { type: 'women', url: 'https://shop.lululemon.com/c/women-bestsellers/n16o10znskl' },
+        // { type: 'men', url: 'https://shop.lululemon.com/c/men-clothes/n1oxc7' },
+        { type: 'men', url: 'https://shop.lululemon.com/c/men-bestsellers/n1nrqwznskl' },
+        // { type: 'women', url: 'https://shop.lululemon.com/c/women-clothes/n14uwk' },
+        { type: 'women', url: 'https://shop.lululemon.com/c/women-bestsellers/n16o10znskl' },
       ]
 
       let products = []
