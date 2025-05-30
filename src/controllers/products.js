@@ -12,6 +12,7 @@ import {
   findBestFit,
   findProductsByKeyword,
   formatSearchResponse,
+  getAvailableSizes,
   getBestFitForMeasurement,
   getCategoryCounts,
   getMatchingSizes,
@@ -699,11 +700,13 @@ export const CONTROLLER_PRODUCT = {
       filteredSizes.flatMap(({ name, numericalSize, numericalValue }) => [name, numericalSize, numericalValue])
     )
 
+    const matchingAvailableSizes = getAvailableSizes(product, sizeSet, isJCrew)
+
     // Check which sizes are available
-    const matchingAvailableSizes = product.sizes?.filter((s) => {
-      const sizeKey = isJCrew ? stripSuffix(s.size) : s.size
-      return sizeSet.has(sizeKey)
-    })
+    // const matchingAvailableSizes = product.sizes?.filter((s) => {
+    //   const sizeKey = isJCrew ? stripSuffix(s.size) : s.size
+    //   return sizeSet.has(sizeKey)
+    // })
 
     if (!matchingAvailableSizes?.length) {
       return res.status(StatusCodes.OK).json({
@@ -727,9 +730,17 @@ export const CONTROLLER_PRODUCT = {
     }
 
     const sizeCandidates = [bestFit.numericalSize, bestFit.numericalValue, bestFit.name]
-
+    console.log('matchingAvailableSizes', matchingAvailableSizes)
     // Find the first matching size that exists in product.sizes
-    const recommendedSize = sizeCandidates.find((size) => availableSizes.includes(size)) || null
+    // const recommendedSize = sizeCandidates.find((size) => matchingAvailableSizes.includes(size)) || null
+    const recommendedSizeObj =
+      matchingAvailableSizes.find((s) => {
+        const sizeKey = isJCrew ? stripSuffix(s.size) : s.size
+        return sizeCandidates.includes(sizeKey)
+      }) || null
+
+    const recommendedSize = recommendedSizeObj?.size || null
+
     return res.status(StatusCodes.OK).json({
       product,
       alterationRequired,

@@ -94,8 +94,15 @@ export const getAvailableSizes = (product, sizeSet, isJCrew) => {
   })
 }
 
-export const stripSuffix = (sizeName) => sizeName.split('#')[0]
+// export const stripSuffix = (sizeName) => sizeName.split('#')[0]
+export const stripSuffix = (sizeName) => {
+  if (!sizeName) return ''
 
+  const base = sizeName.split('#')[0] // Remove suffix like "M#1"
+  const primary = base.split('/')[0] // If size is "28/32", get "28"
+
+  return primary.trim()
+}
 export const getSizeMatch = (size, filteredSizes, isJCrew = false) => {
   const sizeKey = isJCrew ? stripSuffix(size) : size
   return filteredSizes.find((m) => m.name === sizeKey || m.numericalSize === sizeKey || m.numericalValue === sizeKey)
@@ -137,12 +144,12 @@ export const createBasicProductInfo = (product) => {
 }
 
 // Helper function to create product result object
-const createProductResult = (product, alterationRequired, attributeDifferences, wishlistSet) => {
+const createProductResult = (product, alterationRequired, wishlistSet) => {
   const { _id } = product
   return {
     product: createBasicProductInfo(product),
     alterationRequired,
-    attributeDifferences,
+    // attributeDifferences,
     isWishlist: wishlistSet.has(_id.toString()),
   }
 }
@@ -205,12 +212,12 @@ const processProduct = (
 
   const alterationRequired = checkAlterationRequired(availableSizes, filteredSizes, isJCrew)
 
-  let attributeDifferences = null
-  if (alterationRequired) {
-    attributeDifferences = calculateAttributeDifferences(availableSizes, filteredSizes, category, isJCrew)
-  }
+  // let attributeDifferences = null
+  // if (alterationRequired) {
+  //   attributeDifferences = calculateAttributeDifferences(availableSizes, filteredSizes, category, isJCrew)
+  // }
 
-  return createProductResult(product, alterationRequired, attributeDifferences, wishlistSet)
+  return createProductResult(product, alterationRequired, wishlistSet)
 }
 
 // Function to process a single brand
@@ -342,13 +349,13 @@ const createSearchResult = (product, bestMatch, wishlistSet) => {
   const { _id } = product
   const alterationRequired = bestMatch?.alterationRequired ?? true
   const closestSizeDiff = bestMatch?.sizeDifference ?? Infinity
-  const attributeDifferences = alterationRequired ? bestMatch?.attributeDifferences : null
+  // const attributeDifferences = alterationRequired ? bestMatch?.attributeDifferences : null
 
   return {
     product: createBasicProductInfo(product),
     alterationRequired,
     closestSizeDiff,
-    attributeDifferences,
+    // attributeDifferences,
     isWishlist: wishlistSet.has(_id.toString()),
   }
 }
@@ -366,10 +373,10 @@ export const sortSearchResults = (results) => {
 
 // Helper function to format search response
 export const formatSearchResponse = (results) => {
-  return results.map(({ product, alterationRequired, attributeDifferences, isWishlist }) => ({
+  return results.map(({ product, alterationRequired, isWishlist }) => ({
     product,
     alterationRequired,
-    attributeDifferences,
+    // attributeDifferences,
     isWishlist,
   }))
 }
