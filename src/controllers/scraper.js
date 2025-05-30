@@ -29,6 +29,81 @@ import { updateOrCreateProductCollection } from '../services'
 const axios = require('axios')
 const { URL } = require('url')
 let globalBrowser = null
+// const getJCrewProductUrlsForPriceFromCategory = async (categoryUrl, existingPage = null) => {
+//   const selector = '.product-tile--info'
+//   const page = await setupPage(categoryUrl, selector, existingPage)
+
+//   if (!page) return []
+
+//   try {
+//     const products = await page.evaluate((baseUrl) => {
+//       const results = []
+//       document.querySelectorAll('[data-testid="product-tile"]').forEach((block) => {
+//         const linkElement = block.querySelector('a.ProductDetails__link___8Bf30')
+//         if (linkElement) {
+//           const relativeUrl = linkElement.getAttribute('href')
+//           const absoluteUrl = new URL(relativeUrl, baseUrl).toString()
+
+//           const wasPrice = block.querySelector('[data-testid="strikethrough"]')?.textContent.trim()
+//           const currentPrice = block.querySelector('[data-testid="currentPrice"]')?.textContent.trim()
+//           const nowPrice = block.querySelector('.is-price')?.textContent.trim()
+//           let price = nowPrice || wasPrice || currentPrice || ''
+//           if (/^Sale Price:\s*(from\s*)?/i.test(price)) {
+//             price = price.replace(/^Sale Price:\s*(from\s*)?/i, '').trim()
+//           }
+
+//           results.push({ url: absoluteUrl, price })
+//         }
+//       })
+//       return results
+//     }, categoryUrl)
+//     const hasNextPage = await page.evaluate(() => {
+//       const nextPageLink = document.querySelector('.ArrayPagination__next___lrjgC')
+//       return nextPageLink ? nextPageLink.getAttribute('to') : null
+//     })
+
+//     if (hasNextPage) {
+//       const nextPageUrl = new URL(hasNextPage, categoryUrl).toString()
+//       await new Promise((resolve) => setTimeout(resolve, 6000))
+//       const nextPageProducts = await getJCrewProductUrlsForPriceFromCategory(nextPageUrl, page)
+//       return [...products, ...nextPageProducts]
+//     }
+
+//     return products
+//   } catch (error) {
+//     console.error(`Error updating price from ${categoryUrl}:`, error)
+//     return []
+//   }
+// }
+// getJCrewProductPrices: asyncMiddleware(async (req, res) => {
+//Categorization Done
+
+//   res.status(StatusCodes.ACCEPTED).json({
+//     message: 'Started updating product prices...',
+//   })
+
+//   try {
+//     const categories = [
+//       'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=9',
+//       'https://www.jcrew.com/plp/womens?Npge=1&Nrpp=9',
+//     ]
+
+//     for (const url of categories) {
+//       const products = await getJCrewProductUrlsForPriceFromCategory(url)
+//       console.log('products', products)
+//       for (const product of products) {
+//         await Product.updateOne({ url: product.url }, { $set: { price: product.price } })
+//       }
+//     }
+
+//     console.log('✅ Price update complete')
+//   } finally {
+//     if (globalBrowser) {
+//       await globalBrowser.close()
+//       globalBrowser = null
+//     }
+//   }
+// })
 
 const getBrowser = async (headlessValue) => {
   if (!globalBrowser) {
@@ -58,7 +133,7 @@ const getBrowser = async (headlessValue) => {
   return globalBrowser
 }
 
-const createPage = async (browser) => {
+const createPage = async (browser, isLululemon) => {
   const page = await browser.newPage()
 
   // Set realistic viewport and user agent
@@ -66,7 +141,19 @@ const createPage = async (browser) => {
   await page.setUserAgent(
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
   )
-
+  if (isLululemon) {
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US,en;q=0.9',
+      Accept: '*/*',
+      'Accept-Encoding': 'gzip, deflate, br',
+      Connection: 'keep-alive',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-site',
+      Origin: 'https://shop.lululemon.com',
+      Referer: 'https://shop.lululemon.com/',
+    })
+  }
   // Block unnecessary resources
   await page.setRequestInterception(true)
   page.on('request', (req) => {
@@ -120,10 +207,10 @@ const createPage = async (browser) => {
   return page
 }
 
-const createPagePool = async (browser, size = MAX_CONCURRENCY) => {
+const createPagePool = async (browser, isLululemon) => {
   const pagePool = []
-  for (let i = 0; i < size; i++) {
-    pagePool.push(await createPage(browser))
+  for (let i = 0; i < MAX_CONCURRENCY; i++) {
+    pagePool.push(await createPage(browser, isLululemon))
   }
   return pagePool
 }
@@ -141,11 +228,26 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null, head
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       )
-      await page.setExtraHTTPHeaders({
-        'Accept-Language': 'en-US,en;q=0.9',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,/;q=0.8',
-        Connection: 'keep-alive',
-      })
+
+      if (categoryUrl.includes('lululemon.com')) {
+        await page.setExtraHTTPHeaders({
+          'Accept-Language': 'en-US,en;q=0.9',
+          Accept: '*/*',
+          'Accept-Encoding': 'gzip, deflate, br',
+          Connection: 'keep-alive',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-site',
+          Origin: 'https://shop.lululemon.com',
+          Referer: 'https://shop.lululemon.com/',
+        })
+      } else {
+        await page.setExtraHTTPHeaders({
+          'Accept-Language': 'en-US,en;q=0.9',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,/;q=0.8',
+          Connection: 'keep-alive',
+        })
+      }
     }
 
     await page.goto(categoryUrl, {
@@ -164,9 +266,9 @@ const setupPage = async (categoryUrl, waitForSelector, existingPage = null, head
   }
 }
 
-const scrapeProductsInParallel = async (products, browser, fetchFunction) => {
+const scrapeProductsInParallel = async (products, browser, fetchFunction, isLululemon = false) => {
   // Create a pool of pages to reuse
-  const pagePool = await createPagePool(browser)
+  const pagePool = await createPagePool(browser, isLululemon)
   // Process products in batches
   const results = [...products]
   const batchSize = 45
@@ -820,8 +922,9 @@ const extractJCrewProductsFromPage = async (page, baseUrl) => {
         const absoluteUrl = new URL(relativeUrl, baseUrl).toString()
         // Extract rating
         const wasPrice = block.querySelector('[data-testid="strikethrough"]')?.textContent.trim()
+        const currentPrice = block.querySelector('[data-testid="currentPrice"]')?.textContent.trim()
         const nowPrice = block.querySelector('.is-price')?.textContent.trim()
-        let price = nowPrice || wasPrice || ''
+        let price = nowPrice || wasPrice || currentPrice || ''
         if (/^Sale Price:\s*(from\s*)?/i.test(price)) {
           price = price.replace(/^Sale Price:\s*(from\s*)?/i, '').trim()
         }
@@ -848,65 +951,142 @@ const extractJCrewProductsFromPage = async (page, baseUrl) => {
   }, baseUrl)
 }
 
+// const fetchLuluLemonProductDescription = async (url, page) => {
+//   try {
+//     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+
+//     await page.waitForSelector('[data-lll-pl="size-tile"]', { timeout: 120000 })
+
+//     const [primaryImageUrl, sizes, description, reviewCount, rating] = await Promise.all([
+//       page.evaluate(() => {
+//         const preloadLink = document.querySelector('link[rel="preload"][as="image"]')
+//         return preloadLink?.href || null
+//       }),
+
+//       page.evaluate(() => {
+//         return Array.from(document.querySelectorAll('[data-lll-pl="size-tile"]')).map((el) => {
+//           const size = el.textContent.trim()
+//           const inStock = !el.className.includes('size-tile_sizeTileUnavailable')
+//           return { size, inStock }
+//         })
+//       }),
+
+//       page.evaluate(() => {
+//         return Array.from(document.querySelectorAll('button[data-testid="designed-for-button"]'))
+//           .map((el) => `<li>${el.innerHTML.trim()}</li>`)
+//           .join('')
+//       }),
+
+//       page.evaluate(() => {
+//         const el = document.querySelector('.reviews-link_reviewsLinkCount__Ok1LX')
+//         const countText = el.textContent.trim()
+//         const match = countText.match(/\d+/) // Match first number (parentheses are irrelevant here)
+//         return match ? parseInt(match[0], 10) : 0
+//       }),
+
+//       page.evaluate(() => {
+//         const ldJson = document.querySelector('script[type="application/ld+json"]')
+//         const data = JSON.parse(ldJson.textContent)
+//         return data.aggregateRating?.ratingValue ? Math.round(data.aggregateRating?.ratingValue * 10) / 10 : null
+//       }),
+//     ])
+
+//     const secondaryImageUrls = primaryImageUrl ? await fetchSecondaryImages(primaryImageUrl) : []
+//     return {
+//       description: description || '',
+//       sizes: sizes || [],
+//       image: {
+//         primary: primaryImageUrl,
+//         secondary: secondaryImageUrls,
+//       },
+//       reviewCount,
+//       rating,
+//     }
+//   } catch (err) {
+//     console.error(`❌ Failed to fetch description from ${url}: ${err.message}`)
+//     return { description: '', sizes: [] }
+//   }
+// }
+
 const fetchLuluLemonProductDescription = async (url, page) => {
+  const TIMEOUT_MS = 120000
+
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+    const result = await Promise.race([
+      (async () => {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: TIMEOUT_MS })
 
-    await page.waitForFunction(
-      () => {
-        return document.querySelector('[data-lll-pl="size-tile"]') // Wait for the first div with the description
-      },
-      { timeout: 120000 }
-    )
+        // Ensure the product page actually loaded
+        if (page.url() !== url) {
+          throw new Error(`Redirected to ${page.url()}`)
+        }
 
-    const [primaryImageUrl, sizes, description, reviewCount, rating] = await Promise.all([
-      page.evaluate(() => {
-        const preloadLink = document.querySelector('link[rel="preload"][as="image"]')
-        return preloadLink?.href || null
-      }),
+        await page.waitForSelector('[data-lll-pl="size-tile"]', { timeout: 15000 })
 
-      page.evaluate(() => {
-        return Array.from(document.querySelectorAll('[data-lll-pl="size-tile"]')).map((el) => {
-          const size = el.textContent.trim()
-          const inStock = !el.className.includes('size-tile_sizeTileUnavailable')
-          return { size, inStock }
-        })
-      }),
+        const [primaryImageUrl, sizes, description, reviewCount, rating] = await Promise.all([
+          page.evaluate(() => {
+            const preloadLink = document.querySelector('link[rel="preload"][as="image"]')
+            return preloadLink?.href || null
+          }),
 
-      page.evaluate(() => {
-        return Array.from(document.querySelectorAll('button[data-testid="designed-for-button"]'))
-          .map((el) => `<li>${el.innerHTML.trim()}</li>`)
-          .join('')
-      }),
+          page.evaluate(() => {
+            return Array.from(document.querySelectorAll('[data-lll-pl="size-tile"]')).map((el) => {
+              const size = el.textContent.trim()
+              const inStock = !el.className.includes('size-tile_sizeTileUnavailable')
+              return { size, inStock }
+            })
+          }),
 
-      page.evaluate(() => {
-        const el = document.querySelector('.reviews-link_reviewsLinkCount__Ok1LX')
-        const countText = el.textContent.trim()
-        const match = countText.match(/\d+/) // Match first number (parentheses are irrelevant here)
-        return match ? parseInt(match[0], 10) : 0
-      }),
+          page.evaluate(() => {
+            return Array.from(document.querySelectorAll('button[data-testid="designed-for-button"]'))
+              .map((el) => `<li>${el.innerHTML.trim()}</li>`)
+              .join('')
+          }),
 
-      page.evaluate(() => {
-        const ldJson = document.querySelector('script[type="application/ld+json"]')
-        const data = JSON.parse(ldJson.textContent)
-        return data.aggregateRating?.ratingValue ? Math.round(data.aggregateRating?.ratingValue * 10) / 10 : null
-      }),
+          page.evaluate(() => {
+            try {
+              const el = document.querySelector('.reviews-link_reviewsLinkCount__Ok1LX')
+              const countText = el?.textContent?.trim() || ''
+              const match = countText.match(/\d+/)
+              return match ? parseInt(match[0], 10) : 0
+            } catch (e) {
+              return 0
+            }
+          }),
+
+          page.evaluate(() => {
+            try {
+              const ldJson = document.querySelector('script[type="application/ld+json"]')
+              const data = JSON.parse(ldJson?.textContent || '{}')
+              return data.aggregateRating?.ratingValue ? Math.round(data.aggregateRating.ratingValue * 10) / 10 : null
+            } catch (e) {
+              return null
+            }
+          }),
+        ])
+
+        const secondaryImageUrls = primaryImageUrl ? await fetchSecondaryImages(primaryImageUrl) : []
+        return {
+          description: description || '',
+          sizes: sizes || [],
+          image: {
+            primary: primaryImageUrl,
+            secondary: secondaryImageUrls,
+          },
+          reviewCount,
+          rating,
+        }
+      })(),
+
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS / 1000}s`)), TIMEOUT_MS)
+      ),
     ])
 
-    const secondaryImageUrls = primaryImageUrl ? await fetchSecondaryImages(primaryImageUrl) : []
-    return {
-      description: description || '',
-      sizes: sizes || [],
-      image: {
-        primary: primaryImageUrl,
-        secondary: secondaryImageUrls,
-      },
-      reviewCount,
-      rating,
-    }
+    return result
   } catch (err) {
-    console.error(`❌ Failed to fetch description from ${url}: ${err.message}`)
-    return { description: '', sizes: [] }
+    console.error(`❌ Skipped ${url}: ${err.message}`)
+    return { description: '', sizes: [] } // fallback
   }
 }
 
@@ -925,7 +1105,8 @@ const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = n
     const productsWithDescriptions = await scrapeProductsInParallel(
       products,
       page.browser(),
-      fetchLuluLemonProductDescription
+      fetchLuluLemonProductDescription,
+      true
     )
     console.log(`✅ Completed fetching descriptions for ${productsWithDescriptions.length} products`)
     return productsWithDescriptions
@@ -1462,7 +1643,7 @@ export const CONTROLLER_SCRAPER = {
         globalBrowser = null
       }
     }
-  }), //Categorization Done
+  }),
 
   getLuluLemonProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({

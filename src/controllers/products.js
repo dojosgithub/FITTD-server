@@ -6,9 +6,13 @@ import { asyncMiddleware } from '../middlewares'
 import { categorizeProductByName, determineSubCategory, getCategoriesName } from '../utils/categoryConfig'
 import {
   aggregateProductsByBrandAndCategory,
+  calculateAttributeDifferences,
+  checkAlterationRequired,
   extractUniqueBrands,
+  findBestFit,
   findProductsByKeyword,
   formatSearchResponse,
+  getBestFitForMeasurement,
   getCategoryCounts,
   getMatchingSizes,
   getSimilarProducts,
@@ -23,153 +27,12 @@ import {
   processAllSearchProducts,
   processBrandProducts,
   sortSearchResults,
+  stripSuffix,
   validateRequiredParams,
   validateSearchParams,
 } from '../utils'
 
 dotenv.config()
-
-function parseMeasurementRange(measurement) {
-  if (!measurement) return []
-
-  const measurementStr = measurement.toString().trim()
-
-  // Handle range format like "35-36"
-  if (measurementStr.includes('-')) {
-    const [start, end] = measurementStr.split('-').map((num) => parseFloat(num.trim()))
-    return [start, end]
-  }
-
-  // Handle comma-separated format like "35,36,37,38" or quoted values like "35", "36", "37", "38"
-  if (measurementStr.includes(',')) {
-    return measurementStr
-      .split(',')
-      .map((num) => parseFloat(num.trim().replace(/['"]/g, ''))) // Remove quotes and trim
-      .filter((num) => !isNaN(num)) // Filter out invalid numbers
-  }
-
-  // Handle single value like "35" or 35
-  const singleValue = parseFloat(measurementStr.replace(/['"]/g, ''))
-  return isNaN(singleValue) ? [] : [singleValue]
-}
-
-// Helper function to get the primary measurement value for sorting
-function getPrimaryMeasurement(measurement) {
-  const values = parseMeasurementRange(measurement)
-  return values.length > 0 ? Math.min(...values) : 0
-}
-
-// Helper function to determine the best fit based on user measurement and fit type
-function getBestFitForMeasurement(userMeasurement, sizeMeasurement, fitType) {
-  const measurementValues = parseMeasurementRange(sizeMeasurement)
-
-  if (measurementValues.length === 0) return { fits: false, score: Infinity }
-
-  switch (fitType) {
-    case 'fitted':
-      // For fitted, look for exact match only
-      if (measurementValues.includes(userMeasurement)) {
-        return { fits: true, score: 0, matchType: 'fitted' }
-      }
-      // If no exact match, do NOT return closest — just no fit
-      return { fits: false, score: Infinity, matchType: 'fitted' }
-    case 'tight':
-      // For tight fit, prefer sizes smaller than user measurement (not equal)
-      const smallerValues = measurementValues.filter((val) => val < userMeasurement)
-      if (smallerValues.length > 0) {
-        const bestTight = Math.max(...smallerValues) // Closest smaller value
-        return { fits: true, score: userMeasurement - bestTight, matchType: 'tight' }
-      }
-      // If no smaller values, find closest for fallback
-      const closestTight = measurementValues.reduce((closest, val) =>
-        Math.abs(val - userMeasurement) < Math.abs(closest - userMeasurement) ? val : closest
-      )
-      return { fits: false, score: Math.abs(closestTight - userMeasurement), matchType: 'tight' }
-
-    case 'loose':
-      // For loose fit, prefer sizes larger than user measurement (not equal)
-      const largerValues = measurementValues.filter((val) => val > userMeasurement)
-      if (largerValues.length > 0) {
-        const bestLoose = Math.min(...largerValues) // Closest larger value
-        return { fits: true, score: bestLoose - userMeasurement, matchType: 'loose' }
-      }
-      // If no larger values, find closest for fallback
-      const closestLoose = measurementValues.reduce((closest, val) =>
-        Math.abs(val - userMeasurement) < Math.abs(closest - userMeasurement) ? val : closest
-      )
-      return { fits: false, score: Math.abs(closestLoose - userMeasurement), matchType: 'loose' }
-
-    default:
-      return { fits: false, score: Infinity, matchType: 'fitted' }
-  }
-}
-
-// Enhanced function to find best fit based on bust measurements
-function findBestFit(sizeChart, userMeasurements, fitType, measurementType) {
-  const userMeasurement = measurementType === 'bust' ? userMeasurements.bust : userMeasurements.waist
-
-  if (!userMeasurement || !sizeChart) return null
-  // Convert size chart to array and sort by bust measurement
-  const sortedSizes = sizeChart
-    .map((size) => ({
-      name: size.name,
-      measurements: size.measurements,
-      measurementValue: getPrimaryMeasurement(size.measurements[measurementType]),
-      numericalSize: size.numericalSize,
-      numericalValue: size.numericalValue,
-    }))
-    .filter((size) => size.measurements?.[measurementType]) // ensure bust exists
-    .sort((a, b) => a.measurementValue - b.measurementValue)
-
-  // Find best fit based on fit type
-  let bestFit = null
-  let bestScore = Infinity
-  const selectedLabels = new Set()
-  for (const size of sortedSizes) {
-    const measurement = size.measurements[measurementType]
-    const fitResult = getBestFitForMeasurement(userMeasurement, measurement, fitType)
-    // Prioritize exact fits, then best scores
-    if (fitResult.fits && fitResult.score === 0) {
-      // Perfect match found
-      return {
-        name: size.name,
-        numericalSize: size.numericalSize,
-        numericalValue: size.numericalValue,
-      }
-    }
-
-    if (fitResult.fits) {
-      // If this label already selected with the same score, skip this one
-      if (selectedLabels.has(size.name)) {
-        continue // skip this duplicate label with same score
-      }
-
-      // If this candidate is better score or bestFit not set yet
-      if (fitResult.score < bestScore || !bestFit) {
-        bestScore = fitResult.score
-        bestFit = {
-          name: size.name,
-          numericalSize: size.numericalSize,
-          numericalValue: size.numericalValue,
-        }
-        selectedLabels.add(size.name)
-      }
-    } else {
-      // If not fit, but better score and no fit found yet
-      if (fitResult.score < bestScore && !bestFit) {
-        bestScore = fitResult.score
-        bestFit = {
-          name: size.name,
-          numericalSize: size.numericalSize,
-          numericalValue: size.numericalValue,
-        }
-        selectedLabels.add(size.name)
-      }
-    }
-  }
-
-  return bestFit
-}
 
 export const CONTROLLER_PRODUCT = {
   getCategoryCountsAcrossBrands: asyncMiddleware(async (req, res) => {
@@ -721,14 +584,6 @@ export const CONTROLLER_PRODUCT = {
     res.status(StatusCodes.OK).json({ data: trending })
   }),
 
-  migrateProducts: asyncMiddleware(async (req, res) => {
-    const flatProducts = await Product.find({})
-
-    console.log(`🔁 Copying ${flatProducts.length} products to "products" collection...`)
-    await Product.insertMany(flatProducts)
-    console.log(`✅ Migrated ${flatProducts.length} products`)
-  }),
-
   getProductDetails: asyncMiddleware(async (req, res) => {
     const { productId } = req.query
     const userId = req.decoded._id
@@ -738,22 +593,23 @@ export const CONTROLLER_PRODUCT = {
     }
 
     // Fetch product by ID
-    const product = await Product.findById(productId).lean()
+    const [product, wishlistSet, user] = await Promise.all([
+      Product.findById(productId).lean(),
+      getWishlistProductIdSet(userId),
+      UserMeasurement.findOne({ userId }).lean(),
+    ])
+
     if (!product) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'Product not found.' })
     }
-    const similarProducts = await getSimilarProducts(product)
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' })
+    }
 
     const brand = product.brand
     const gender = product.gender
     const category = product.category
     const name = product.name || ''
-
-    // Fetch user measurements
-    const user = await UserMeasurement.findOne({ userId }).lean()
-    if (!user) {
-      return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' })
-    }
 
     const userBust = user.upperBody?.bust?.value || user.upperBody?.chest?.value
     const userWaist = user.lowerBody?.waist?.value
@@ -772,7 +628,10 @@ export const CONTROLLER_PRODUCT = {
       categoryKey = 'denim'
     }
     // Fetch size chart for brand
-    const sizeChartDoc = await SizeChart.findOne({ brand }, { brand: 1, [`sizeChart.${unit}`]: 1 }).lean()
+    const [similarProducts, sizeChartDoc] = await Promise.all([
+      getSimilarProducts(product, wishlistSet),
+      SizeChart.findOne({ brand }, { brand: 1, [`sizeChart.${unit}`]: 1 }).lean(),
+    ])
 
     const sizeChart =
       sizeChartDoc?.sizeChart?.[unit]?.[gender]?.[categoryKey] ||
@@ -803,14 +662,80 @@ export const CONTROLLER_PRODUCT = {
       return res.status(StatusCodes.OK).json({
         product,
         recommendedSize: null,
+        alterationRequired: false,
+        attributeDifferences: null,
         similarProducts,
         message: 'No size match found based on your measurements.',
       })
     }
+    const sizeMatchCacheByBrand = {}
+    sizeMatchCacheByBrand[brand] = {}
+    console.log('bestfit', bestFit)
+    const matchingSizes = getMatchingSizes(
+      brand,
+      subCategory,
+      sizeChart,
+      sizeMatchCacheByBrand, // empty cache since this is a one-time lookup
+      userBust,
+      userWaist,
+      userHip,
+      userSleeves,
+      fitType,
+      true
+    )
+    // console.log('matchingSizes', matchingSizes)
 
+    const filteredSizes = matchingSizes.filter(
+      (s) =>
+        s.name === bestFit.name &&
+        s.numericalSize === bestFit.numericalSize &&
+        s.numericalValue === bestFit.numericalValue
+    )
+    const availableSizes = (product.sizes || []).map((s) => s.size)
+    console.log('filteredSizes', filteredSizes)
+
+    // Create size set for checking availability
+    const sizeSet = new Set(
+      filteredSizes.flatMap(({ name, numericalSize, numericalValue }) => [name, numericalSize, numericalValue])
+    )
+
+    // Check which sizes are available
+    const matchingAvailableSizes = product.sizes?.filter((s) => {
+      const sizeKey = isJCrew ? stripSuffix(s.size) : s.size
+      return sizeSet.has(sizeKey)
+    })
+
+    if (!matchingAvailableSizes?.length) {
+      return res.status(StatusCodes.OK).json({
+        product,
+        recommendedSize: null,
+        alterationRequired: null,
+        attributeDifferences: null,
+        fitType: null,
+        similarProducts,
+        message: 'No matching sizes available for this product.',
+      })
+    }
+
+    // Check if alteration is required
+    const alterationRequired = checkAlterationRequired(matchingAvailableSizes, filteredSizes, isJCrew)
+
+    // Calculate attribute differences if alteration is required
+    let attributeDifferences = null
+    if (alterationRequired) {
+      attributeDifferences = calculateAttributeDifferences(matchingAvailableSizes, filteredSizes, category, isJCrew)
+    }
+
+    const sizeCandidates = [bestFit.numericalSize, bestFit.numericalValue, bestFit.name]
+
+    // Find the first matching size that exists in product.sizes
+    const recommendedSize = sizeCandidates.find((size) => availableSizes.includes(size)) || null
     return res.status(StatusCodes.OK).json({
       product,
-      recommendedSize: bestFit.name || bestFit.numericalSize || bestFit.numericalValue || null,
+      alterationRequired,
+      attributeDifferences,
+      recommendedSize,
+      fitType: bestFit.fitMatch,
       similarProducts,
     })
   }),

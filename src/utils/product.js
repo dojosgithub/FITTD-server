@@ -87,7 +87,7 @@ const getBrandSizeChart = (sizeChartMap, brand, gender, categoryKey, unit) => {
 }
 
 // Helper function to filter available sizes
-const getAvailableSizes = (product, sizeSet, isJCrew) => {
+export const getAvailableSizes = (product, sizeSet, isJCrew) => {
   return product.sizes?.filter((s) => {
     const sizeKey = isJCrew ? stripSuffix(s.size) : s.size
     return sizeSet.has(sizeKey)
@@ -110,7 +110,7 @@ export const calculateFitAttributeDifferences = (matching, fitAttribute) => {
   }).attributeDifferences
 }
 // Helper function to calculate attribute differences
-const calculateAttributeDifferences = (availableSizes, filteredSizes, category, isJCrew) => {
+export const calculateAttributeDifferences = (availableSizes, filteredSizes, category, isJCrew) => {
   const fitAttribute = category === 'bottoms' ? 'waist' : 'bust'
 
   const matching = availableSizes.map((s) => getSizeMatch(s.size, filteredSizes, isJCrew)).filter(Boolean)
@@ -119,7 +119,7 @@ const calculateAttributeDifferences = (availableSizes, filteredSizes, category, 
 }
 
 // Helper function to check if alteration is required
-const checkAlterationRequired = (availableSizes, filteredSizes, isJCrew) => {
+export const checkAlterationRequired = (availableSizes, filteredSizes, isJCrew) => {
   return !availableSizes.some((s) => {
     const match = getSizeMatch(s.size, filteredSizes, isJCrew)
     return match?.alterationRequired === false
@@ -450,4 +450,174 @@ export const findProductsByKeyword = async (keyword, gender, category) => {
   }
 
   return await Product.find(query).lean()
+}
+
+const parseMeasurementRange = (measurement) => {
+  if (!measurement) return []
+
+  const measurementStr = measurement.toString().trim()
+
+  // Handle range format like "35-36"
+  if (measurementStr.includes('-')) {
+    const [start, end] = measurementStr.split('-').map((num) => parseFloat(num.trim()))
+    return [start, end]
+  }
+
+  // Handle comma-separated format like "35,36,37,38" or quoted values like "35", "36", "37", "38"
+  if (measurementStr.includes(',')) {
+    return measurementStr
+      .split(',')
+      .map((num) => parseFloat(num.trim().replace(/['"]/g, ''))) // Remove quotes and trim
+      .filter((num) => !isNaN(num)) // Filter out invalid numbers
+  }
+
+  // Handle single value like "35" or 35
+  const singleValue = parseFloat(measurementStr.replace(/['"]/g, ''))
+  return isNaN(singleValue) ? [] : [singleValue]
+}
+
+// Helper function to get the primary measurement value for sorting
+const getPrimaryMeasurement = (measurement) => {
+  const values = parseMeasurementRange(measurement)
+  return values.length > 0 ? Math.min(...values) : 0
+}
+
+// Helper function to determine the best fit based on user measurement and fit type
+export const getBestFitForMeasurement = (userMeasurement, sizeMeasurement, fitType) => {
+  const measurementValues = parseMeasurementRange(sizeMeasurement)
+
+  if (measurementValues.length === 0) return { fits: false, score: Infinity }
+
+  switch (fitType) {
+    case 'fitted':
+      // For fitted, look for exact match only
+      if (userMeasurement >= Math.min(...measurementValues) && userMeasurement <= Math.max(...measurementValues)) {
+        return { fits: true, score: 0, matchType: 'fitted' }
+      }
+      const smallerValues = measurementValues.filter((val) => val < userMeasurement)
+      const largerValues = measurementValues.filter((val) => val > userMeasurement)
+
+      const bestTight = smallerValues.length > 0 ? Math.max(...smallerValues) : null
+      const bestLoose = largerValues.length > 0 ? Math.min(...largerValues) : null
+
+      const tightScore = bestTight !== null ? userMeasurement - bestTight : Infinity
+      const looseScore = bestLoose !== null ? bestLoose - userMeasurement : Infinity
+      if (tightScore < looseScore) {
+        console.log('tightScore1', tightScore)
+
+        return { fits: true, score: tightScore, matchType: 'tight' }
+      } else if (looseScore < Infinity) {
+        console.log('looseScore', looseScore)
+
+        return { fits: true, score: looseScore, matchType: 'loose' }
+      }
+
+      return { fits: false, score: Infinity, matchType: 'fitted' }
+    case 'tight':
+      // For tight fit, prefer sizes smaller than user measurement (not equal)
+      const tightVals = measurementValues.filter((val) => val < userMeasurement)
+      console.log('tightVals', tightVals)
+      if (tightVals.length > 0) {
+        const bestTight = Math.max(...tightVals) // Closest smaller value
+        console.log('bestTight', bestTight)
+
+        return { fits: true, score: userMeasurement - bestTight, matchType: 'tight' }
+      }
+      // If no smaller values, find closest for fallback
+      const closestTight = measurementValues.reduce((closest, val) =>
+        Math.abs(val - userMeasurement) < Math.abs(closest - userMeasurement) ? val : closest
+      )
+      console.log('closestTight', closestTight)
+
+      return { fits: false, score: Math.abs(closestTight - userMeasurement), matchType: 'tight' }
+
+    case 'loose':
+      // For loose fit, prefer sizes larger than user measurement (not equal)
+      const looseVals = measurementValues.filter((val) => val > userMeasurement)
+      if (looseVals.length > 0) {
+        const bestLoose = Math.min(...looseVals) // Closest larger value
+        return { fits: true, score: bestLoose - userMeasurement, matchType: 'loose' }
+      }
+      // If no larger values, find closest for fallback
+      const closestLoose = measurementValues.reduce((closest, val) =>
+        Math.abs(val - userMeasurement) < Math.abs(closest - userMeasurement) ? val : closest
+      )
+      return { fits: false, score: Math.abs(closestLoose - userMeasurement), matchType: 'loose' }
+
+    default:
+      return { fits: false, score: Infinity, matchType: 'fitted' }
+  }
+}
+
+// Enhanced function to find best fit based on bust measurements
+export const findBestFit = (sizeChart, userMeasurements, fitType, measurementType) => {
+  const userMeasurement = measurementType === 'bust' ? userMeasurements.bust : userMeasurements.waist
+
+  if (!userMeasurement || !sizeChart) return null
+  // Convert size chart to array and sort by bust measurement
+  const sortedSizes = sizeChart
+    .map((size) => ({
+      name: size.name,
+      measurements: size.measurements,
+      measurementValue: getPrimaryMeasurement(size.measurements[measurementType]),
+      numericalSize: size.numericalSize,
+      numericalValue: size.numericalValue,
+    }))
+    .filter((size) => size.measurements?.[measurementType]) // ensure bust exists
+    .sort((a, b) => a.measurementValue - b.measurementValue)
+
+  // Find best fit based on fit type
+  let bestFit = null
+  let bestScore = Infinity
+  const selectedLabels = new Set()
+  for (const size of sortedSizes) {
+    const measurement = size.measurements[measurementType]
+    const fitResult = getBestFitForMeasurement(userMeasurement, measurement, fitType)
+    // Prioritize exact fits, then best scores
+    if (fitResult.fits && fitResult.score === 0) {
+      // Perfect match found
+      return {
+        name: size.name,
+        numericalSize: size.numericalSize,
+        numericalValue: size.numericalValue,
+        measurements: size.measurements,
+        fitMatch: fitResult.matchType,
+      }
+    }
+
+    if (fitResult.fits) {
+      // If this label already selected with the same score, skip this one
+      // if (selectedLabels.has(size.name)) {
+      //   continue // skip this duplicate label with same score
+      // }
+
+      // If this candidate is better score or bestFit not set yet
+      if (fitResult.score < bestScore || !bestFit) {
+        bestScore = fitResult.score
+        bestFit = {
+          name: size.name,
+          numericalSize: size.numericalSize,
+          numericalValue: size.numericalValue,
+          measurements: size.measurements,
+          fitMatch: fitResult.matchType,
+        }
+        selectedLabels.add(size.name)
+      }
+    } else {
+      // If not fit, but better score and no fit found yet
+      if (fitResult.score < bestScore && !bestFit) {
+        bestScore = fitResult.score
+        bestFit = {
+          name: size.name,
+          numericalSize: size.numericalSize,
+          numericalValue: size.numericalValue,
+          measurements: size.measurements,
+          fitMatch: fitResult.matchType,
+        }
+        selectedLabels.add(size.name)
+      }
+    }
+  }
+
+  return bestFit
 }

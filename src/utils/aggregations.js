@@ -169,7 +169,7 @@ export const getTrendingProducts = async (limit = 4, wishlistSet, gender) => {
   }))
 }
 
-export const getSimilarProducts = async (product) => {
+export const getSimilarProducts = async (product, wishlistSet) => {
   if (!product || !product._id || !product.category || !product.brand || !product.gender) {
     throw new Error('Invalid product object passed to getSimilarProducts.')
   }
@@ -188,10 +188,14 @@ export const getSimilarProducts = async (product) => {
       $project: {
         name: 1,
         price: 1,
-        primaryImage: '$image.primary', // adjust if using image array
+        primaryImage: '$image.primary',
       },
     },
   ])
 
-  return similarProducts
+  // Add isWishlist field to each product
+  return similarProducts.map((product) => ({
+    ...product,
+    isWishlist: wishlistSet.has(String(product._id)),
+  }))
 }

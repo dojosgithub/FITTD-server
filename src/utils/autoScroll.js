@@ -28,8 +28,66 @@ const countValidProducts = async (page) => {
     }).length
   })
 }
+export const scrollToLoadProducts = async (page, productSelector) => {
+  await page.evaluate((selector) => {
+    return new Promise((resolve) => {
+      let lastScrollHeight = 0
+      let scrollAttempts = 0
+      let noScrollCount = 0
+      const maxNoScrollAttempts = 5 // 10 seconds of no scroll detection
+      const scrollDistance = 1000
+      const scrollDelay = 200 // 1 second between scrolls
 
-export async function loadMoreLuluLemonProducts(page, selector, categoryUrl) {
+      const scroll = () => {
+        const currentScrollHeight = document.body.scrollHeight
+        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop
+
+        // Scroll down
+        window.scrollBy(0, scrollDistance)
+
+        // Wait a bit for content to load
+        setTimeout(() => {
+          const newScrollTop = window.pageYOffset || document.documentElement.scrollTop
+          const newScrollHeight = document.body.scrollHeight
+
+          // Check if we actually scrolled (page moved)
+          if (newScrollTop === currentScrollTop && newScrollHeight === currentScrollHeight) {
+            noScrollCount++
+            console.log(`📜 No scroll detected (${noScrollCount}/${maxNoScrollAttempts})`)
+          } else {
+            noScrollCount = 0 // Reset counter if we successfully scrolled
+            console.log(`📜 Scrolled to position: ${newScrollTop}, page height: ${newScrollHeight}`)
+          }
+
+          // If we can't scroll anymore for 10 consecutive attempts, stop
+          if (noScrollCount >= maxNoScrollAttempts) {
+            console.log(`📜 Finished scrolling - reached bottom or no more content loading`)
+            resolve()
+            return
+          }
+
+          // Continue scrolling
+          lastScrollHeight = newScrollHeight
+          scrollAttempts++
+
+          // Safety limit
+          if (scrollAttempts > 200) {
+            console.log(`📜 Reached maximum scroll attempts (${scrollAttempts})`)
+            resolve()
+            return
+          }
+
+          // Continue scrolling
+          setTimeout(scroll, scrollDelay)
+        }, 1500) // Wait 1.5 seconds for products to load after each scroll
+      }
+
+      // Start scrolling
+      scroll()
+    })
+  }, productSelector)
+}
+export const loadMoreLuluLemonProducts = async (page, selector, categoryUrl) => {
   const productSelector = selector
   const buttonSelector = 'button[data-lll-pl="button"][class*="pagination_button"]'
   let previousCount = 0
@@ -58,7 +116,7 @@ export async function loadMoreLuluLemonProducts(page, selector, categoryUrl) {
 
         const style = window.getComputedStyle(btn)
         const rect = btn.getBoundingClientRect()
-
+        // btn.scrollIntoView({ behavior: 'smooth', block: 'center' })
         return (
           !btn.disabled &&
           btn.offsetParent !== null &&
@@ -103,6 +161,7 @@ export async function loadMoreLuluLemonProducts(page, selector, categoryUrl) {
 
           console.log(`🖱️ Clicked "View More Products" button on attempt ${attempt}`)
           clicked = true
+
           break
         } catch (error) {
           console.error(`⚠️ Attempt ${attempt}: Failed to click the button:`, error)
@@ -150,8 +209,9 @@ export async function loadMoreLuluLemonProducts(page, selector, categoryUrl) {
       // Refresh the page
       await page.goto(categoryUrl, { waitUntil: 'networkidle2', timeout: 120000 }) // <== use this instead of page.reload()
 
-      await page.waitForTimeout(5000)
-
+      // await page.waitForTimeout(5000)
+      // await autoScroll(page)
+      await scrollToLoadProducts(page, productSelector)
       newCount = await page.$$eval(productSelector, (els) => els.length)
       console.log(`📦 Products after refresh: ${newCount}`)
 

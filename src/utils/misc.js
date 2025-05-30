@@ -289,11 +289,11 @@ export const getMatchingSizes = (
       const waistFit = getFitTypeAndAlteration(userWaist, waist)
       const sleevesFit = getFitTypeAndAlteration(userSleeves, sleeves)
       const attributeDifferences = {
-        bust: bustFit.difference,
+        bust: bustFit.difference?.toFixed(2),
         bustDirection: bustFit.direction,
-        waist: waistFit.difference,
+        waist: waistFit.difference?.toFixed(2),
         waistDirection: waistFit.direction,
-        sleeves: sleevesFit.difference,
+        sleeves: sleevesFit.difference?.toFixed(2),
         sleevesDirection: sleevesFit.direction,
       }
 
@@ -336,9 +336,9 @@ export const getMatchingSizes = (
       const waistFit = getFitTypeAndAlteration(userWaist, waist)
       const hipFit = getFitTypeAndAlteration(userHip, hip)
       const attributeDifferences = {
-        waist: waistFit.difference,
+        waist: waistFit.difference?.toFixed(2),
         waistDirection: waistFit.direction,
-        hip: hipFit.difference,
+        hip: hipFit.difference?.toFixed(2),
         hipDirection: hipFit.direction,
       }
       if (waistFit.fitType === 'fitted') {
