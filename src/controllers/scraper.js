@@ -105,7 +105,7 @@ let globalBrowser = null
 //   }
 // })
 const failedPages = new Set()
-const maxFailures = 3
+const maxFailures = 5
 const getBrowser = async (headlessValue) => {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
@@ -878,7 +878,7 @@ const getJCrewProductUrlsFromCategory = async (categoryUrl, existingPage = null)
   //   return []
   // }
   if (!page) {
-    console.warn(`⚠️ Skipping page due to setup failure: ${categoryUrl}`)
+    console.warn(`⚠️ Skipping ${failedPages.size} page due to setup failure: ${categoryUrl}`)
     failedPages.add(categoryUrl)
 
     // Stop if we've failed 3 times on different pages
