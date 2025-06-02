@@ -104,7 +104,8 @@ let globalBrowser = null
 //     }
 //   }
 // })
-
+const failedPages = new Set()
+const maxFailures = 3
 const getBrowser = async (headlessValue) => {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
@@ -873,9 +874,37 @@ const getJCrewProductUrlsFromCategory = async (categoryUrl, existingPage = null)
   const selector = '.product-tile--info'
   const page = await setupPage(categoryUrl, selector, existingPage)
 
+  // if (!page) {
+  //   return []
+  // }
   if (!page) {
-    return []
+    console.warn(`⚠️ Skipping page due to setup failure: ${categoryUrl}`)
+    failedPages.add(categoryUrl)
+
+    // Stop if we've failed 3 times on different pages
+    if (failedPages.size >= maxFailures) {
+      console.error(`🛑 Too many consecutive setup failures (${maxFailures}). Aborting.`)
+      return []
+    }
+
+    // Try to move to the next page manually
+    try {
+      const urlObj = new URL(categoryUrl)
+      const currentPage = parseInt(urlObj.searchParams.get('Npge'), 10)
+      const nextPage = currentPage + 1
+      urlObj.searchParams.set('Npge', nextPage.toString())
+
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+      return await getJCrewProductUrlsFromCategory(urlObj.toString(), null)
+    } catch (e) {
+      console.error('⚠️ Failed to construct next page URL after setup error.', e)
+      return []
+    }
   }
+
+  // Reset failure counter if a page loads successfully
+  failedPages.clear()
+
   page.on('console', (msg) => {
     if (msg.type() === 'log') {
       console.log(`🧠 BROWSER LOG: ${msg.text()}`)
@@ -1711,10 +1740,10 @@ export const CONTROLLER_SCRAPER = {
     })
     try {
       const categories = [
+        { type: 'clothes', url: 'https://www.thereformation.com/clothing?page=125' },
         { type: 'wedding', url: 'https://www.thereformation.com/bridal?page=28' },
         { type: 'shoes', url: 'https://www.thereformation.com/shoes?page=29' },
         { type: 'bags', url: 'https://www.thereformation.com/bags?page=7' },
-        { type: 'clothes', url: 'https://www.thereformation.com/clothing?page=125' },
       ]
 
       for (const category of categories) {

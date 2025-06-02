@@ -289,12 +289,12 @@ export const getMatchingSizes = (
       const waistFit = getFitTypeAndAlteration(userWaist, waist)
       const sleevesFit = getFitTypeAndAlteration(userSleeves, sleeves)
       const attributeDifferences = {
-        bust: bustFit.difference?.toFixed(2),
-        bustDirection: bustFit.direction,
-        waist: waistFit.difference?.toFixed(2),
-        waistDirection: waistFit.direction,
-        sleeves: sleevesFit.difference?.toFixed(2),
-        sleevesDirection: sleevesFit.direction,
+        bust: bustFit.difference?.toFixed(2) || null,
+        bustDirection: bustFit.direction || null,
+        waist: waistFit.difference?.toFixed(2) || null,
+        waistDirection: waistFit.direction || null,
+        sleeves: sleevesFit.difference?.toFixed(2) || null,
+        sleevesDirection: sleevesFit.direction || null,
       }
 
       // Determine overall fitType and alterationRequired
