@@ -1121,7 +1121,7 @@ const fetchLuluLemonProductDescription = async (url, page) => {
 
 const getLuluLemonProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
   const selector = 'div[data-testid="product-tile"]'
-  const page = await setupPage(categoryUrl, selector, existingPage, false)
+  const page = await setupPage(categoryUrl, selector, existingPage)
 
   if (!page) {
     return []
