@@ -131,7 +131,7 @@ export const getCategoryCounts = async (categories, brand, ProductModel) => {
   return categoryCounts
 }
 
-export const getTrendingProducts = async (limit = 4, wishlistSet, gender) => {
+export const getTrendingProducts = async (limit, wishlistSet, gender) => {
   const trending = await ProductMetrics.aggregate([
     {
       $lookup: {
@@ -167,6 +167,45 @@ export const getTrendingProducts = async (limit = 4, wishlistSet, gender) => {
     clickCount: item.clickCount,
     isWishlist: wishlistSet.has(item._id.toString()),
   }))
+}
+
+export const getTrendingOrRandomProducts = async (limit, wishlistSet, gender) => {
+  const trending = await getTrendingProducts(limit, wishlistSet, gender)
+  const trendingIds = trending.map((item) => item._id)
+  const remaining = limit - trending.length
+
+  let random = []
+  if (remaining > 0) {
+    random = await Product.aggregate([
+      {
+        $match: {
+          gender: gender,
+          _id: { $nin: trendingIds },
+          brand: { $ne: 'Sabo_Skirt' },
+        },
+      },
+      { $sample: { size: remaining } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          price: 1,
+          image: { primary: '$image.primary' },
+        },
+      },
+    ])
+
+    random = random.map((item) => ({
+      _id: item._id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      clickCount: 0,
+      isWishlist: wishlistSet.has(item._id.toString()),
+    }))
+  }
+
+  return [...trending, ...random]
 }
 
 export const getSimilarProducts = async (product, wishlistSet) => {

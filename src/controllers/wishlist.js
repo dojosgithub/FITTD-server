@@ -56,7 +56,14 @@ export const CONTROLLER_WISHLIST = {
       path: 'productId',
       select: '_id image.primary name price', // 👈 Only these fields
     })
+    const formatted = items.map((item) => ({
+      _id: item._id,
+      userId: item.userId,
+      product: item.productId,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    }))
 
-    return res.status(StatusCodes.OK).json({ data: items })
+    return res.status(StatusCodes.OK).json({ data: formatted })
   }),
 }

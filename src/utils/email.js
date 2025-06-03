@@ -108,10 +108,9 @@ export default class Email {
   async sendForgotPassword(arg) {
     await this.send('forgot-password', 'Reset code', arg)
   }
-  async welcomeToZeal(arg) {
-    await this.send('welcome-to-zeal', 'Welcome to Zeal Fitness App', arg)
+  async welcomeToFITTD(arg) {
+    await this.send('welcome-to-zeal', 'Welcome to FITTD', arg)
   }
-
   async registerAccount(arg) {
     await this.send('register', 'Registration Code', arg)
   }

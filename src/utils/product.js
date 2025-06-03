@@ -510,12 +510,8 @@ export const getBestFitForMeasurement = (userMeasurement, sizeMeasurement, fitTy
       const tightScore = bestTight !== null ? userMeasurement - bestTight : Infinity
       const looseScore = bestLoose !== null ? bestLoose - userMeasurement : Infinity
       if (tightScore < looseScore) {
-        console.log('tightScore1', tightScore)
-
         return { fits: true, score: tightScore, matchType: 'tight' }
       } else if (looseScore < Infinity) {
-        console.log('looseScore', looseScore)
-
         return { fits: true, score: looseScore, matchType: 'loose' }
       }
 
@@ -523,10 +519,8 @@ export const getBestFitForMeasurement = (userMeasurement, sizeMeasurement, fitTy
     case 'tight':
       // For tight fit, prefer sizes smaller than user measurement (not equal)
       const tightVals = measurementValues.filter((val) => val < userMeasurement)
-      console.log('tightVals', tightVals)
       if (tightVals.length > 0) {
         const bestTight = Math.max(...tightVals) // Closest smaller value
-        console.log('bestTight', bestTight)
 
         return { fits: true, score: userMeasurement - bestTight, matchType: 'tight' }
       }
@@ -534,7 +528,6 @@ export const getBestFitForMeasurement = (userMeasurement, sizeMeasurement, fitTy
       const closestTight = measurementValues.reduce((closest, val) =>
         Math.abs(val - userMeasurement) < Math.abs(closest - userMeasurement) ? val : closest
       )
-      console.log('closestTight', closestTight)
 
       return { fits: false, score: Math.abs(closestTight - userMeasurement), matchType: 'tight' }
 

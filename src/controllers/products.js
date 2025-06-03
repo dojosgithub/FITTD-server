@@ -18,6 +18,7 @@ import {
   getMatchingSizes,
   getSimilarProducts,
   getSizeCharts,
+  getTrendingOrRandomProducts,
   getTrendingProducts,
   getUserMeasurements,
   getWishlistProductIdSet,
@@ -580,8 +581,7 @@ export const CONTROLLER_PRODUCT = {
     const wishlistSet = await getWishlistProductIdSet(userId)
     const userMeasurements = await getUserMeasurements(userId)
 
-    const trending = await getTrendingProducts(limit, wishlistSet, userMeasurements.gender)
-
+    const trending = await getTrendingOrRandomProducts(limit, wishlistSet, userMeasurements.gender)
     res.status(StatusCodes.OK).json({ data: trending })
   }),
 
@@ -692,8 +692,7 @@ export const CONTROLLER_PRODUCT = {
         s.numericalSize === bestFit.numericalSize &&
         s.numericalValue === bestFit.numericalValue
     )
-    const availableSizes = (product.sizes || []).map((s) => s.size)
-    console.log('filteredSizes', filteredSizes)
+    // const availableSizes = (product.sizes || []).map((s) => s.size)
 
     // Create size set for checking availability
     const sizeSet = new Set(

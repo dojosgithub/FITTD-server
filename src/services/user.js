@@ -67,7 +67,7 @@ export const signupOAuthUser = async (signupUserData, fcmToken) => {
 
   const sendEmail = await new Email({ email })
   const emailProps = { name: fullName }
-  await sendEmail.welcomeToZeal(emailProps)
+  await sendEmail.welcomeToFITTD(emailProps)
 
   return newUser.toObject()
 }
