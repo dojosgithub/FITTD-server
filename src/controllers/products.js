@@ -14,6 +14,7 @@ import {
   formatSearchResponse,
   getAvailableSizes,
   getBestFitForMeasurement,
+  getBrandSizeChart,
   getCategoryCounts,
   getMatchingSizes,
   getSimilarProducts,
@@ -28,6 +29,7 @@ import {
   parseSkipValues,
   processAllSearchProducts,
   processBrandProducts,
+  processProduct,
   sortSearchResults,
   stripSuffix,
   validateRequiredParams,
@@ -103,208 +105,81 @@ export const CONTROLLER_PRODUCT = {
   //   const { brands, category, PAGE_SIZE = 10, fitType = 'fitted' } = req.query
   //   const userId = req.decoded._id
 
-  //   // Parse skip values for each brand
-  //   const skipParam = req.query.skip || '{}'
-  //   const skipValues = typeof skipParam === 'string' ? JSON.parse(skipParam) : skipParam
+  //   // Parse and validate parameters
+  //   const skipValues = parseSkipValues(req.query.skip)
+  //   const brandsArray = parseBrandsArray(brands)
 
-  //   // Parse brands parameter (could be a single brand or an array)
-  //   const brandsArray = Array.isArray(brands) ? brands : brands.split(',')
-
-  //   if (!brands || !userId || !category) {
-  //     return res.status(StatusCodes.BAD_REQUEST).json({ message: 'brands, category, and userId are required' })
+  //   if (!validateRequiredParams(brands, userId, category)) {
+  //     return res.status(StatusCodes.BAD_REQUEST).json({
+  //       message: 'brands, category, and userId are required',
+  //     })
   //   }
+
+  //   // Get user data
   //   const wishlistSet = await getWishlistProductIdSet(userId)
-  //   // Fetch user measurements
   //   const userMeasurements = await getUserMeasurements(userId)
+
   //   if (!userMeasurements) {
   //     return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' })
   //   }
 
-  //   const { userBust, userWaist, userHip, userSleeves, unit, gender } = userMeasurements
+  //   const { unit, gender } = userMeasurements
 
-  //   // Calculate products per brand - distribute evenly
+  //   // Calculate products per brand
   //   const numBrands = brandsArray.length
   //   const productsPerBrand = Math.ceil(PAGE_SIZE / numBrands)
 
-  //   // Set up result structure
-  //   const result = {}
-  //   // Keep track of processed products per brand
-  //   const productsProcessed = {}
-  //   const nextSkipValues = {}
-
-  //   // Initialize counters for each brand
-  //   brandsArray.forEach((brand) => {
-  //     productsProcessed[brand] = 0
-  //     nextSkipValues[brand] = skipValues[brand] || 0
-  //   })
-
+  //   // Initialize state
+  //   const { productsProcessed, nextSkipValues } = initializeBrandState(brandsArray, skipValues)
   //   const sizeChartMap = await getSizeCharts(brandsArray, unit)
-  //   // Create size match cache per brand
+
+  //   // Create caches
   //   const sizeMatchCacheByBrand = {}
   //   const subCategoryCacheByBrand = {}
 
-  //   // Process each brand to find matching products
-  //   const processPromises = brandsArray.map(async (brand) => {
-  //     // Initialize caches for this brand
+  //   brandsArray.forEach((brand) => {
   //     sizeMatchCacheByBrand[brand] = {}
   //     subCategoryCacheByBrand[brand] = new Map()
+  //   })
 
-  //     // Process products in batches until we have enough matches
-  //     const matchedProducts = []
-  //     let currentSkip = skipValues[brand] || 0
-  //     let hasMoreProducts = true
+  //   // Process each brand
+  //   const processPromises = brandsArray.map(async (brand) => {
+  //     const result = await processBrandProducts(
+  //       brand,
+  //       category,
+  //       gender,
+  //       productsPerBrand,
+  //       skipValues,
+  //       sizeChartMap,
+  //       sizeMatchCacheByBrand,
+  //       subCategoryCacheByBrand,
+  //       userMeasurements,
+  //       fitType,
+  //       wishlistSet,
+  //       unit,
+  //       BATCH_SIZE
+  //     )
 
-  //     while (matchedProducts.length < productsPerBrand && hasMoreProducts) {
-  //       const productsBatch = await Product.aggregate([
-  //         {
-  //           $match: {
-  //             brand,
-  //             category,
-  //             gender,
-  //           },
-  //         },
-  //         { $skip: currentSkip },
-  //         { $limit: BATCH_SIZE },
-  //       ])
+  //     // Update tracking variables
+  //     productsProcessed[brand] = result.productsProcessed
+  //     nextSkipValues[brand] = result.nextSkip
 
-  //       if (!productsBatch.length) {
-  //         hasMoreProducts = false
-  //         break
-  //       }
-
-  //       for (let i = 0; i < productsBatch.length; i++) {
-  //         const product = productsBatch[i]
-  //         productsProcessed[brand]++
-
-  //         const name = product.name || ''
-  //         const gender = product.gender
-  //         const subCategoryCache = subCategoryCacheByBrand[brand]
-  //         const subCategory =
-  //           category === 'denim' ? subCategoryCache.get(name) || determineSubCategory(category, name) : category
-  //         if (category === 'denim' && !subCategoryCache.has(name)) {
-  //           subCategoryCache.set(name, subCategory)
-  //         }
-
-  //         const isTopsCategory = subCategory === 'tops' || subCategory === 'outerwear' || subCategory === 'dresses'
-  //         const categoryKey = isTopsCategory ? 'tops' : 'bottoms'
-  //         // const hasTallSize = product.sizes?.some((s) => s.size.includes('#Tall'))
-  //         // Determine which size chart key to use for fallback: 'tall' or 'default'
-  //         // const fallbackSizeKey = hasTallSize ? 'tall' : 'default'
-  //         const isJCrew = product.brand === 'J_Crew'
-
-  //         if (isJCrew && gender === 'female' && category === 'denim') {
-  //           categoryKey = 'denim'
-  //         }
-
-  //         const sizeChart =
-  //           sizeChartMap[brand]?.[gender]?.[categoryKey] ||
-  //           // sizeChartMap[brand]?.[gender]?.[fallbackSizeKey] ||
-  //           sizeChartMap[brand]?.[gender]?.default ||
-  //           sizeChartMap[brand]?.default ||
-  //           null
-
-  //         if (!sizeChart) {
-  //           console.warn(`No sizeChart found for brand ${brand} with unit ${unit}`)
-  //           continue
-  //         }
-
-  //         const matchingSizes = getMatchingSizes(
-  //           brand,
-  //           subCategory,
-  //           sizeChart,
-  //           sizeMatchCacheByBrand,
-  //           userBust,
-  //           userWaist,
-  //           userHip,
-  //           userSleeves,
-  //           fitType
-  //         )
-  //         const filteredSizes = matchingSizes.filter((s) => s.fitType === fitType)
-  //         const sizeSet = new Set(
-  //           filteredSizes.flatMap(({ name, numericalSize, numericalValue }) => [name, numericalSize, numericalValue])
-  //         )
-
-  //         // const availableSizes = product.sizes?.filter((s) => sizeSet.has(s.size))
-  //         const stripSuffix = (sizeName) => sizeName.split('#')[0]
-
-  //         const availableSizes = product.sizes?.filter((s) => {
-  //           const sizeKey = isJCrew ? stripSuffix(s.size) : s.size
-  //           return sizeSet.has(sizeKey)
-  //         })
-  //         if (availableSizes?.length) {
-  //           const alterationRequired = !availableSizes.some((s) => {
-  //             const sSizeKey = isJCrew ? stripSuffix(s.size) : s.size
-  //             const match = filteredSizes.find(
-  //               (m) => m.name === sSizeKey || m.numericalSize === sSizeKey || m.numericalValue === sSizeKey
-  //             )
-  //             return match?.alterationRequired === false
-  //           })
-  //           let attributeDifferences = null
-
-  //           if (alterationRequired) {
-  //             // Collect differences from first matching size
-  //             const fitAttribute = category === 'bottoms' ? 'waist' : 'bust'
-
-  //             const matching = availableSizes
-  //               .map((s) => {
-  //                 const sSizeKey = isJCrew ? stripSuffix(s.size) : s.size
-  //                 return filteredSizes.find(
-  //                   (m) => m.name === sSizeKey || m.numericalSize === sSizeKey || m.numericalValue === sSizeKey
-  //                 )
-  //               })
-  //               .filter(Boolean)
-
-  //             if (matching.length > 0) {
-  //               // Find the one with the smallest difference based on fitAttribute
-  //               const bestMatch = matching.reduce((best, curr) => {
-  //                 const bestDiff = parseFloat(best.attributeDifferences[fitAttribute] || 'Infinity')
-  //                 const currDiff = parseFloat(curr.attributeDifferences[fitAttribute] || 'Infinity')
-  //                 return currDiff < bestDiff ? curr : best
-  //               })
-
-  //               attributeDifferences = bestMatch.attributeDifferences
-  //             } else {
-  //               attributeDifferences = null
-  //             }
-  //           }
-
-  //           const { _id, name, price, image } = product
-  //           matchedProducts.push({
-  //             product: { _id, name, price, image: { primary: image?.primary } },
-  //             alterationRequired,
-  //             attributeDifferences,
-  //             isWishlist: wishlistSet.has(_id.toString()),
-  //           })
-  //         }
-  //         if (matchedProducts.length >= productsPerBrand) {
-  //           nextSkipValues[brand] = currentSkip + i + 1
-  //           break
-  //         }
-  //       }
-
-  //       currentSkip += productsBatch.length
-  //     }
-
-  //     // If we didn't get enough products and there are no more, set nextSkip to null for this brand
-  //     if (matchedProducts.length < productsPerBrand && !hasMoreProducts) {
-  //       nextSkipValues[brand] = null
-  //     }
-
-  //     return { brand, products: matchedProducts }
+  //     return result
   //   })
 
   //   // Wait for all brand processing to complete
   //   const brandResults = await Promise.all(processPromises)
 
+  //   // Compile results
+  //   const result = {}
   //   result[category] = []
 
   //   brandResults.forEach(({ products }) => {
   //     result[category].push(...products)
   //   })
 
-  //   // Calculate total matched
+  //   // Calculate response metadata
   //   const totalMatched = result[category].length
-  //   // Determine if there are more products for any brand
   //   const hasMoreForAnyBrand = Object.values(nextSkipValues).some((value) => value !== null)
 
   //   return res.status(StatusCodes.OK).json({
@@ -326,9 +201,9 @@ export const CONTROLLER_PRODUCT = {
     const skipValues = parseSkipValues(req.query.skip)
     const brandsArray = parseBrandsArray(brands)
 
-    if (!validateRequiredParams(brands, userId, category)) {
+    if (!validateRequiredParams(brands, userId)) {
       return res.status(StatusCodes.BAD_REQUEST).json({
-        message: 'brands, category, and userId are required',
+        message: 'brands and userId are required',
       })
     }
 
@@ -358,10 +233,16 @@ export const CONTROLLER_PRODUCT = {
       sizeMatchCacheByBrand[brand] = {}
       subCategoryCacheByBrand[brand] = new Map()
     })
+    let currentBrandIndex = 0
+    let allResults = []
+    let remainingSlots = PAGE_SIZE
+    // Process brands until we fill PAGE_SIZE or run out of brands/products
+    while (remainingSlots > 0 && currentBrandIndex < brandsArray.length) {
+      const remainingBrands = brandsArray.length - currentBrandIndex
+      const productsPerBrand = Math.ceil(remainingSlots / remainingBrands)
 
-    // Process each brand
-    const processPromises = brandsArray.map(async (brand) => {
-      const result = await processBrandProducts(
+      const brand = brandsArray[currentBrandIndex]
+      const brandResult = await processBrandProducts(
         brand,
         category,
         gender,
@@ -378,25 +259,24 @@ export const CONTROLLER_PRODUCT = {
       )
 
       // Update tracking variables
-      productsProcessed[brand] = result.productsProcessed
-      nextSkipValues[brand] = result.nextSkip
+      productsProcessed[brand] = brandResult.productsProcessed
+      nextSkipValues[brand] = brandResult.nextSkip
 
-      return result
-    })
+      // Add products to results
+      allResults.push(...brandResult.products)
 
-    // Wait for all brand processing to complete
-    const brandResults = await Promise.all(processPromises)
+      // Update remaining slots
+      remainingSlots -= brandResult.products.length
+      currentBrandIndex++
+    }
 
-    // Compile results
-    const result = {}
-    result[category] = []
+    // Prepare final results object
+    // const result = {}
+    // result[category] = allResults.slice(0, PAGE_SIZE) // Ensure we don't exceed PAGE_SIZE
 
-    brandResults.forEach(({ products }) => {
-      result[category].push(...products)
-    })
-
-    // Calculate response metadata
-    const totalMatched = result[category].length
+    // const totalMatched = result[category].length
+    const finalResults = allResults.slice(0, PAGE_SIZE)
+    const totalMatched = finalResults.length
     const hasMoreForAnyBrand = Object.values(nextSkipValues).some((value) => value !== null)
 
     return res.status(StatusCodes.OK).json({
@@ -405,111 +285,12 @@ export const CONTROLLER_PRODUCT = {
       productsPerBrand,
       productsProcessed,
       nextSkip: hasMoreForAnyBrand ? nextSkipValues : null,
-      data: result,
+      data: {
+        products: finalResults,
+      },
+      // data: result,
     })
   }),
-
-  // searchProducts: asyncMiddleware(async (req, res) => {
-  //   const { keyword, fitType = 'fitted' } = req.query
-  //   const userId = req.decoded._id
-
-  //   if (!keyword || !userId) {
-  //     return res.status(StatusCodes.BAD_REQUEST).json({ message: 'keyword, category, and userId are required' })
-  //   }
-
-  //   const userMeasurements = await getUserMeasurements(userId)
-  //   if (!userMeasurements) {
-  //     return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' })
-  //   }
-
-  //   const { userBust, userWaist, userHip, userSleeves, unit, gender } = userMeasurements
-
-  //   const matchingProducts = await Product.find({
-  //     name: { $regex: keyword, $options: 'i' },
-  //     gender,
-  //   }).lean()
-
-  //   if (!matchingProducts.length) {
-  //     return res.status(StatusCodes.OK).json({ data: [], total: 0 })
-  //   }
-  //   // Get all unique brands
-  //   const brands = [...new Set(matchingProducts.map((p) => p.brand))]
-
-  //   const sizeChartMap = await getSizeCharts(brands, unit)
-  //   const sizeMatchCacheByBrand = {}
-  //   const subCategoryCacheByBrand = {}
-
-  //   brands.forEach((brand) => {
-  //     sizeMatchCacheByBrand[brand] = {}
-  //     subCategoryCacheByBrand[brand] = new Map()
-  //   })
-  //   const results = []
-
-  //   for (const product of matchingProducts) {
-  //     const subCategory = product.category
-  //     const isTopsCategory = subCategory === 'tops' || subCategory === 'outerwear' || subCategory === 'dresses'
-  //     let categoryKey = isTopsCategory ? 'tops' : 'bottoms'
-
-  //     const isJCrew = product.brand === 'J_Crew'
-  //     if (isJCrew && gender === 'female' && product.category === 'denim') {
-  //       categoryKey = 'denim'
-  //     }
-
-  //     const brandSizeChart =
-  //       sizeChartMap[product.brand]?.[product.gender]?.[categoryKey] || sizeChartMap[product.brand]?.default || null
-
-  //     if (!brandSizeChart) continue
-
-  //     const matchingSizes = getMatchingSizes(
-  //       product.brand,
-  //       subCategory,
-  //       brandSizeChart,
-  //       sizeMatchCacheByBrand,
-  //       userBust,
-  //       userWaist,
-  //       userHip,
-  //       userSleeves,
-  //       fitType
-  //     )
-  //     const filteredSizes = matchingSizes.filter((s) => s.fitType === fitType)
-  //     const productSizeList = product.sizes?.map((s) => s.size) || []
-  //     if (productSizeList?.length) {
-  //       let bestMatch = filteredSizes.find(
-  //         (s) =>
-  //           productSizeList.includes(s.name) ||
-  //           productSizeList.includes(s.numericalSize) ||
-  //           productSizeList.includes(s.numericalValue)
-  //       )
-  //       if (!bestMatch && filteredSizes.length > 0) {
-  //         bestMatch = [...filteredSizes].sort((a, b) => a.sizeDifference - b.sizeDifference)[0]
-  //       }
-  //       const alterationRequired = bestMatch?.alterationRequired ?? true
-  //       const closestSizeDiff = bestMatch?.sizeDifference ?? Infinity
-  //       const attributeDifferences = alterationRequired ? bestMatch?.attributeDifferences : null
-  //       results.push({
-  //         product,
-  //         alterationRequired,
-  //         closestSizeDiff,
-  //         attributeDifferences: attributeDifferences,
-  //       })
-  //     }
-  //   }
-  //   // Sort: No alteration first, then by closest size diff
-  //   results.sort((a, b) => {
-  //     if (a.alterationRequired !== b.alterationRequired) {
-  //       return a.alterationRequired ? 1 : -1
-  //     }
-  //     return a.closestSizeDiff - b.closestSizeDiff
-  //   })
-  //   return res.status(StatusCodes.OK).json({
-  //     total: results.length,
-  //     data: results.map(({ product, alterationRequired, attributeDifferences }) => ({
-  //       product,
-  //       alterationRequired,
-  //       attributeDifferences,
-  //     })),
-  //   })
-  // }),
 
   searchProducts: asyncMiddleware(async (req, res) => {
     const { keyword, fitType = 'fitted', category } = req.query
@@ -751,7 +532,7 @@ export const CONTROLLER_PRODUCT = {
   }),
 
   getSearchSuggestions: asyncMiddleware(async (req, res) => {
-    const { searchText } = req.query
+    const { searchText, category } = req.query
 
     if (!searchText || searchText.trim().length === 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({ message: 'searchText param is required.' })
@@ -760,11 +541,18 @@ export const CONTROLLER_PRODUCT = {
     // Create case-insensitive regex for partial matching
     const regex = new RegExp(searchText, 'i')
 
-    // Fetch up to 10 product suggestions, selecting only _id and name
-    const suggestions = await Product.find({ name: regex, brand: { $ne: 'Sabo_Skirt' } })
-      .limit(6)
-      .select('name')
-      .lean()
+    // Build query object
+    const query = {
+      name: regex,
+      brand: { $ne: 'Sabo_Skirt' },
+    }
+
+    // Add category only if it exists and is non-empty
+    if (category && category.trim() !== '') {
+      query.category = category
+    }
+
+    const suggestions = await Product.find(query).limit(6).select('name').lean()
 
     return res.status(StatusCodes.OK).json({
       suggestions,

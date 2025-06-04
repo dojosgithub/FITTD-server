@@ -20,35 +20,6 @@ export const CONTROLLER_SIZECHART = {
     })
   }),
 
-  migrateSizeCharts: asyncMiddleware(async (req, res) => {
-    // Find the single product document (assuming you have one)
-    const productDoc = await Product.findOne({}).lean()
-
-    if (!productDoc || !productDoc.products) {
-      return res.status(404).json({ message: 'No products found to migrate' })
-    }
-
-    const brands = Object.keys(productDoc.products)
-    if (brands.length === 0) {
-      return res.status(404).json({ message: 'No brands found in products' })
-    }
-    console.log('brands', brands)
-    const migratePromises = brands.map(async (brand) => {
-      const sizeChart = productDoc.products[brand]?.sizeChart
-      if (!sizeChart) {
-        console.warn(`No sizeChart found for brand ${brand}, skipping`)
-        return
-      }
-
-      // Upsert sizeChart per brand in the new collection
-      await SizeChart.updateOne({ brand }, { $set: { sizeChart } }, { upsert: true })
-    })
-
-    await Promise.all(migratePromises)
-
-    return res.status(200).json({ message: 'Size charts migrated successfully' })
-  }),
-
   removeSizeChartsFromProducts: asyncMiddleware(async (req, res) => {
     const productDoc = await Product.findOne({}).lean()
 

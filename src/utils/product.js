@@ -1,4 +1,5 @@
 import { Product, SizeChart, UserMeasurement } from '../models'
+import { determineSubCategory } from './categoryConfig'
 import { getMatchingSizes } from './misc'
 
 export async function getUserMeasurements(userId) {
@@ -14,6 +15,7 @@ export async function getUserMeasurements(userId) {
     userSleeves: user.upperBody?.sleevesLength?.value,
     unit: user.lowerBody?.waist?.unit,
     gender: user.gender,
+    fit: user.fit,
   }
 }
 
@@ -31,8 +33,8 @@ export async function getSizeCharts(brands, unit) {
   return sizeChartMap
 }
 
-export const validateRequiredParams = (brands, userId, category) => {
-  return brands && userId && category
+export const validateRequiredParams = (brands, userId) => {
+  return brands && userId
 }
 // Helper function to parse brands parameter
 export const parseBrandsArray = (brands) => {
@@ -72,7 +74,7 @@ const getCategoryKey = (subCategory, brand, gender, category) => {
 }
 
 // Helper function to get size chart for a brand and category
-const getBrandSizeChart = (sizeChartMap, brand, gender, categoryKey, unit) => {
+export const getBrandSizeChart = (sizeChartMap, brand, gender, categoryKey, unit) => {
   const sizeChart =
     sizeChartMap[brand]?.[gender]?.[categoryKey] ||
     sizeChartMap[brand]?.[gender]?.default ||
@@ -155,7 +157,7 @@ const createProductResult = (product, alterationRequired, wishlistSet) => {
 }
 
 // Main function to process a single product
-const processProduct = (
+export const processProduct = (
   product,
   category,
   sizeChartMap,
@@ -198,8 +200,8 @@ const processProduct = (
     userSleeves,
     fitType
   )
-
   const filteredSizes = matchingSizes.filter((s) => s.fitType === fitType)
+
   const sizeSet = new Set(
     filteredSizes.flatMap(({ name, numericalSize, numericalValue }) => [name, numericalSize, numericalValue])
   )
@@ -240,13 +242,13 @@ export const processBrandProducts = async (
   let currentSkip = skipValues[brand] || 0
   let hasMoreProducts = true
   let productsProcessed = 0
-
+  const defaultCategories = ['tops', 'dresses', 'bottoms', 'outerwear', 'denim']
   while (matchedProducts.length < productsPerBrand && hasMoreProducts) {
     const productsBatch = await Product.aggregate([
       {
         $match: {
           brand,
-          category,
+          category: category ? category : { $in: defaultCategories },
           gender,
         },
       },
@@ -265,7 +267,7 @@ export const processBrandProducts = async (
 
       const processedProduct = processProduct(
         product,
-        category,
+        product.category,
         sizeChartMap,
         sizeMatchCacheByBrand,
         subCategoryCacheByBrand,
@@ -274,7 +276,6 @@ export const processBrandProducts = async (
         wishlistSet,
         unit
       )
-
       if (processedProduct) {
         matchedProducts.push(processedProduct)
       }
