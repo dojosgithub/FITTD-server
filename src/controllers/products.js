@@ -439,12 +439,12 @@ export const CONTROLLER_PRODUCT = {
       fitType,
       measurementType
     )
-
+    console.log('bestFit', bestFit)
     if (!bestFit) {
       return res.status(StatusCodes.OK).json({
         product,
         recommendedSize: null,
-        alterationRequired: false,
+        alterationRequired: null,
         attributeDifferences: null,
         similarProducts,
         message: 'No size match found based on your measurements.',
@@ -452,7 +452,6 @@ export const CONTROLLER_PRODUCT = {
     }
     const sizeMatchCacheByBrand = {}
     sizeMatchCacheByBrand[brand] = {}
-    console.log('bestfit', bestFit)
     const matchingSizes = getMatchingSizes(
       brand,
       subCategory,
