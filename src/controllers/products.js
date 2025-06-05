@@ -389,7 +389,7 @@ export const CONTROLLER_PRODUCT = {
     }
 
     const brand = product.brand
-    const gender = product.gender
+    let gender = product.gender
     const category = product.category
     const name = product.name || ''
 
@@ -406,7 +406,9 @@ export const CONTROLLER_PRODUCT = {
     const isTopsCategory = ['tops', 'outerwear', 'dresses'].includes(subCategory)
     let categoryKey = isTopsCategory ? 'tops' : 'bottoms'
     const isJCrew = brand === 'J_Crew'
-    if (isJCrew && gender === 'female' && category === 'denim') {
+    console.log('subCategory', subCategory)
+    if (isJCrew && subCategory === 'bottoms' && category === 'denim') {
+      gender = 'female'
       categoryKey = 'denim'
     }
     // Fetch size chart for brand
@@ -419,7 +421,7 @@ export const CONTROLLER_PRODUCT = {
       sizeChartDoc?.sizeChart?.[unit]?.[gender]?.[categoryKey] ||
       sizeChartDoc?.sizeChart?.[unit]?.[gender]?.default ||
       sizeChartDoc?.sizeChart?.[unit]?.default
-
+    console.log('sizeChart', sizeChart, unit, gender, categoryKey)
     if (!sizeChart) {
       return res.status(404).json({
         message: `No size chart found for brand ${brand} and unit ${unit}.`,
@@ -437,7 +439,9 @@ export const CONTROLLER_PRODUCT = {
         sleeves: userSleeves,
       },
       fitType,
-      measurementType
+      measurementType,
+      product.sizes,
+      isJCrew
     )
     console.log('bestFit', bestFit)
     if (!bestFit) {
@@ -464,7 +468,6 @@ export const CONTROLLER_PRODUCT = {
       fitType,
       true
     )
-    // console.log('matchingSizes', matchingSizes)
 
     const filteredSizes = matchingSizes.filter(
       (s) =>
@@ -472,7 +475,6 @@ export const CONTROLLER_PRODUCT = {
         s.numericalSize === bestFit.numericalSize &&
         s.numericalValue === bestFit.numericalValue
     )
-    // const availableSizes = (product.sizes || []).map((s) => s.size)
 
     // Create size set for checking availability
     const sizeSet = new Set(
@@ -481,12 +483,7 @@ export const CONTROLLER_PRODUCT = {
 
     const matchingAvailableSizes = getAvailableSizes(product, sizeSet, isJCrew)
 
-    // Check which sizes are available
-    // const matchingAvailableSizes = product.sizes?.filter((s) => {
-    //   const sizeKey = isJCrew ? stripSuffix(s.size) : s.size
-    //   return sizeSet.has(sizeKey)
-    // })
-
+    console.log('matchingAvailableSizes', matchingAvailableSizes)
     if (!matchingAvailableSizes?.length) {
       return res.status(StatusCodes.OK).json({
         product,
@@ -511,7 +508,6 @@ export const CONTROLLER_PRODUCT = {
     const sizeCandidates = [bestFit.numericalSize, bestFit.numericalValue, bestFit.name]
     console.log('matchingAvailableSizes', matchingAvailableSizes)
     // Find the first matching size that exists in product.sizes
-    // const recommendedSize = sizeCandidates.find((size) => matchingAvailableSizes.includes(size)) || null
     const recommendedSizeObj =
       matchingAvailableSizes.find((s) => {
         const sizeKey = isJCrew ? stripSuffix(s.size) : s.size

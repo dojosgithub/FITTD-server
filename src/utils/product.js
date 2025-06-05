@@ -551,12 +551,20 @@ export const getBestFitForMeasurement = (userMeasurement, sizeMeasurement, fitTy
 }
 
 // Enhanced function to find best fit based on bust measurements
-export const findBestFit = (sizeChart, userMeasurements, fitType, measurementType) => {
+export const findBestFit = (sizeChart, userMeasurements, fitType, measurementType, productSizes, isJCrew) => {
   const userMeasurement = measurementType === 'bust' ? userMeasurements.bust : userMeasurements.waist
+  const matchingAvailableSizes = new Set(productSizes.map((s) => (isJCrew ? stripSuffix(s.size) : s.size)))
 
   if (!userMeasurement || !sizeChart) return null
   // Convert size chart to array and sort by bust measurement
   const sortedSizes = sizeChart
+    .filter(
+      (size) =>
+        // Only include sizes that exist in product's sizes
+        matchingAvailableSizes.has(size.name) ||
+        matchingAvailableSizes.has(size.numericalSize) ||
+        matchingAvailableSizes.has(size.numericalValue)
+    )
     .map((size) => ({
       name: size.name,
       measurements: size.measurements,

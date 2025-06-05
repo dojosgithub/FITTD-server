@@ -50,7 +50,7 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
   // Tops category
   if (
-    /\b(top|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse)\b/.test(
+    /\b(top|workshirt|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse)\b/.test(
       lower
     )
   ) {
@@ -77,7 +77,7 @@ export const determineSubCategory = (category, productName) => {
       ? 'dresses'
       : /(cardigan|coat|jacket|blazer|hoodie|popover|zip|vest|parka|anorak|windbreaker)/.test(lower)
       ? 'outerwear'
-      : /\b(top|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse)\b/.test(
+      : /\b(top|bustier|camisole|sweater|workshirt|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse)\b/.test(
           lower
         )
       ? 'tops'
