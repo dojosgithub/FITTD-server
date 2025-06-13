@@ -40,10 +40,14 @@ dotenv.config()
 
 export const CONTROLLER_PRODUCT = {
   getCategoryCountsAcrossBrands: asyncMiddleware(async (req, res) => {
+    const userId = req.decoded._id
     const categories = getCategoriesName()
     const brand = req.query.brand // single brand string or undefined
-
-    const categoryCounts = await getCategoryCounts(categories, brand)
+    const user = await UserMeasurement.findOne({ userId }).lean()
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' })
+    }
+    const categoryCounts = await getCategoryCounts(categories, brand, user.gender)
 
     return res.status(200).json({
       data: categoryCounts,
@@ -324,7 +328,7 @@ export const CONTROLLER_PRODUCT = {
     const sizeChartMap = await getSizeCharts(brands, unit)
 
     // Initialize caches
-    const { sizeMatchCacheByBrand, subCategoryCacheByBrand } = initializeSearchCaches(brands)
+    const { sizeMatchCacheByBrand } = initializeSearchCaches(brands)
 
     // Process all products
     const results = processAllSearchProducts(

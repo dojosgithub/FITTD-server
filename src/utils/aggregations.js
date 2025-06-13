@@ -96,13 +96,16 @@ export const aggregateProductsByBrandAndCategory = (
   ]
 }
 
-export const getCategoryCounts = async (categories, brand, ProductModel) => {
+export const getCategoryCounts = async (categories, brand, gender) => {
   const matchCriteria = {
     category: { $in: categories },
   }
 
   if (brand) {
     matchCriteria.brand = brand // single brand string, no array
+  }
+  if (gender) {
+    matchCriteria.gender = gender // single brand string, no array
   }
 
   const counts = await Product.aggregate([
