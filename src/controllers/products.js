@@ -297,7 +297,7 @@ export const CONTROLLER_PRODUCT = {
   }),
 
   searchProducts: asyncMiddleware(async (req, res) => {
-    const { keyword, fitType = 'fitted', category } = req.query
+    const { keyword, fitType, category } = req.query
     const userId = req.decoded._id
 
     // Validate parameters
@@ -321,6 +321,23 @@ export const CONTROLLER_PRODUCT = {
 
     if (!matchingProducts.length) {
       return res.status(StatusCodes.OK).json({ data: [], total: 0 })
+    }
+    if (!fitType) {
+      const basicResults = matchingProducts.map((product) => ({
+        product: {
+          _id: product._id,
+          name: product.name,
+          price: product.price,
+          image: { primary: product.image?.primary },
+        },
+        alterationRequired: null,
+        isWishlist: wishlistSet.has(product._id.toString()),
+      }))
+
+      return res.status(StatusCodes.OK).json({
+        total: basicResults.length,
+        data: basicResults,
+      })
     }
 
     // Extract unique brands and get size charts
