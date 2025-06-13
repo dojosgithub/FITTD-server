@@ -297,7 +297,7 @@ export const CONTROLLER_PRODUCT = {
   }),
 
   searchProducts: asyncMiddleware(async (req, res) => {
-    const { keyword, fitType, category } = req.query
+    const { keyword, fitType, category, brand } = req.query
     const userId = req.decoded._id
 
     // Validate parameters
@@ -317,7 +317,7 @@ export const CONTROLLER_PRODUCT = {
     const { unit, gender } = userMeasurements
 
     // Search for matching products
-    const matchingProducts = await findProductsByKeyword(keyword, gender, category)
+    const matchingProducts = await findProductsByKeyword(keyword, gender, category, brand)
 
     if (!matchingProducts.length) {
       return res.status(StatusCodes.OK).json({ data: [], total: 0 })

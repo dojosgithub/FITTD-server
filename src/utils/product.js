@@ -455,13 +455,15 @@ export const processAllSearchProducts = (
 }
 
 // Function to search for products by keyword
-export const findProductsByKeyword = async (keyword, gender, category) => {
+export const findProductsByKeyword = async (keyword, gender, category, brand) => {
   const query = {
     name: { $regex: keyword, $options: 'i' },
     gender,
     brand: { $ne: 'Sabo_Skirt' },
   }
-
+  if (brand) {
+    query.brand = brand
+  }
   if (category) {
     query.category = category
   }
