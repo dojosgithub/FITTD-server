@@ -549,11 +549,15 @@ export const CONTROLLER_PRODUCT = {
 
   getSearchSuggestions: asyncMiddleware(async (req, res) => {
     const { searchText, category } = req.query
+    const userId = req.decoded._id
 
     if (!searchText || searchText.trim().length === 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({ message: 'searchText param is required.' })
     }
-
+    const user = await UserMeasurement.findOne({ userId }).lean()
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' })
+    }
     // Create case-insensitive regex for partial matching
     const regex = new RegExp(searchText, 'i')
 
@@ -561,6 +565,7 @@ export const CONTROLLER_PRODUCT = {
     const query = {
       name: regex,
       brand: { $ne: 'Sabo_Skirt' },
+      gender: user.gender,
     }
 
     // Add category only if it exists and is non-empty

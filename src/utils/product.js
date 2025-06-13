@@ -388,7 +388,8 @@ const processSearchProduct = (product, sizeChartMap, sizeMatchCacheByBrand, user
   const subCategory = product.category
   const categoryKey = getCategoryKey(subCategory, product.brand, product.gender, product.category)
   const brandSizeChart = getBrandSizeChart(sizeChartMap, product.brand, product.gender, categoryKey, unit)
-  if (!product.sizes?.length) {
+  console.log('brandSizeChart', brandSizeChart)
+  if (!product.sizes?.length || !brandSizeChart) {
     return {
       product: createBasicProductInfo(product),
       alterationRequired: null,
@@ -396,10 +397,6 @@ const processSearchProduct = (product, sizeChartMap, sizeMatchCacheByBrand, user
       isWishlist: wishlistSet.has(product._id.toString()),
       noSizesAvailable: true, // Add flag to indicate no sizes
     }
-  }
-
-  if (!brandSizeChart) {
-    return null // Skip this product
   }
 
   const matchingSizes = getMatchingSizes(
