@@ -548,7 +548,7 @@ export const CONTROLLER_PRODUCT = {
   }),
 
   getSearchSuggestions: asyncMiddleware(async (req, res) => {
-    const { searchText, category } = req.query
+    const { searchText, category, brand } = req.query
     const userId = req.decoded._id
 
     if (!searchText || searchText.trim().length === 0) {
@@ -564,10 +564,13 @@ export const CONTROLLER_PRODUCT = {
     // Build query object
     const query = {
       name: regex,
-      brand: { $ne: 'Sabo_Skirt' },
       gender: user.gender,
     }
-
+    if (brand) {
+      query.brand = brand
+    } else {
+      query.brand = { $ne: 'Sabo_Skirt' }
+    }
     // Add category only if it exists and is non-empty
     if (category && category.trim() !== '') {
       query.category = category
