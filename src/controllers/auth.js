@@ -266,6 +266,9 @@ export const CONTROLLER_AUTH = {
 
     // 1. Find the user in the database
     const user = await User.findById(userId).select('+password')
+    if (user.accountType === 'FITTD' && !password) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Password is required for FITTD account deletion' })
+    }
     console.log('user', user)
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
