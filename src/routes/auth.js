@@ -9,6 +9,7 @@ const router = Router()
 
 // Signup route
 router.post('/signup', CONTROLLER_AUTH.signup)
+router.post('/oauth', CONTROLLER_AUTH.OAuth)
 router.post('/signin', CONTROLLER_AUTH.signIn)
 router.post('/signout', Authenticate(), CONTROLLER_AUTH.signOut)
 router.post('/verify-otp', CONTROLLER_AUTH.verifyOtp)

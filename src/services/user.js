@@ -60,7 +60,7 @@ export const signupOAuthUser = async (signupUserData, fcmToken) => {
     name: fullName,
     accountType: 'Google',
     isVerified: true,
-    // fcmToken,
+    fcmToken,
   })
 
   await newUser.save()

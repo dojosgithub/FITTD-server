@@ -14,13 +14,14 @@ export const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      // required: true,
       select: false,
     },
     image: { type: String, default: null },
     isVerified: { type: Boolean, default: false },
     accountType: { type: String, default: 'FITTD' },
     measurements: { type: mongoose.Schema.Types.ObjectId, ref: 'UserMeasurement', default: null },
+    fcmToken: { type: String, default: null },
   },
   { versionKey: false, timestamps: true }
 )

@@ -113,7 +113,7 @@ export const CONTROLLER_AUTH = {
   }),
 
   signIn: asyncMiddleware(async (req, res) => {
-    const { email, password } = req.body
+    const { email, password, fcmToken } = req.body
 
     // Search by email or mobile
     // const user = await User.findOne({
@@ -149,7 +149,7 @@ export const CONTROLLER_AUTH = {
     }
 
     const tokens = await generateToken(tokenPayload)
-
+    user.fcmToken = fcmToken
     await user.save()
     const userObj = user.toObject()
     delete userObj.password
@@ -180,11 +180,13 @@ export const CONTROLLER_AUTH = {
       default:
         return res.status(StatusCodes.BAD_REQUEST).json({ auth_type: 'Please provide a valid auth type' })
     }
+    console.log('userData', userData)
     const { email } = userData
     let userExists = await User.findOne({ email: email })
     if (isEmpty(userExists)) userExists = await signupOAuthUser(userData, fcmToken)
+    console.log('userExists', userExists)
     if (userExists) {
-      if (userExists.accountType !== 'Google-Account') {
+      if (userExists.accountType !== 'Google') {
         return res.status(StatusCodes.FORBIDDEN).json({
           message: 'Not a Google account try logging it with FITTD account',
         })
@@ -192,14 +194,16 @@ export const CONTROLLER_AUTH = {
         await User.findOneAndUpdate(
           { email: email },
           {
-            // fcmToken,
-            accountType: 'Google-Account',
+            fcmToken,
+            accountType: 'Google',
           }
         )
       }
       // userExists.fcmToken = fcmToken
     }
     const response = await signinOAuthUser(userExists)
+    console.log('response', response)
+
     if (isEmpty(response)) return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Not able to login via OAuth' })
     res.status(StatusCodes.ACCEPTED).json(response.data)
   }),
