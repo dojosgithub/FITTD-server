@@ -182,7 +182,7 @@ export const CONTROLLER_AUTH = {
     }
     console.log('userData', userData)
     const { email } = userData
-    let userExists = await User.findOne({ email: email })
+    let userExists = await User.findOne({ email: email }).populate('measurements')
     if (isEmpty(userExists)) userExists = await signupOAuthUser(userData, fcmToken)
     console.log('userExists', userExists)
     if (userExists) {
