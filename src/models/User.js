@@ -22,6 +22,7 @@ export const userSchema = new Schema(
     accountType: { type: String, default: 'FITTD' },
     measurements: { type: mongoose.Schema.Types.ObjectId, ref: 'UserMeasurement', default: null },
     fcmToken: { type: String, default: null },
+    lastMeasurementReminderSentAt: { type: Date, default: null },
   },
   { versionKey: false, timestamps: true }
 )

@@ -2,6 +2,8 @@ import { UserMeasurement } from '../models/UserMeasurements.js'
 import { StatusCodes } from 'http-status-codes'
 import { asyncMiddleware } from '../middlewares'
 import { User } from '../models/User.js'
+import { sendPushNotification } from '../utils/pushNotification.js'
+import { isUserMeasurementComplete } from '../services/notification.js'
 
 // Save or update user measurement
 export const CONTROLLER_MEASUREMENT = {
@@ -17,6 +19,7 @@ export const CONTROLLER_MEASUREMENT = {
     }
 
     const existing = await UserMeasurement.findOne({ userId })
+    const wasIncomplete = existingMeasurement ? !isUserMeasurementComplete(existingMeasurement) : true
     let result = null
     if (existing) {
       result = await UserMeasurement.findOneAndUpdate({ userId }, { $set: data }, { new: true })
@@ -26,6 +29,22 @@ export const CONTROLLER_MEASUREMENT = {
     await User.findByIdAndUpdate(userId, {
       measurements: result._id,
     })
+    const isNowComplete = isUserMeasurementComplete(result)
+
+    if (wasIncomplete && isNowComplete) {
+      const user = await User.findById(userId)
+      if (user?.fcmToken) {
+        sendPushNotification({
+          token: user.fcmToken,
+          userId,
+          notification: {
+            title: 'You’re a Style Pro!',
+            body: `Congrats on completing your profile! Enjoy personalized recommendations tailored just for you.`,
+          },
+        })
+      }
+    }
+
     return res.status(StatusCodes.OK).json({
       data: result,
       message: 'Measurement saved successfully.',

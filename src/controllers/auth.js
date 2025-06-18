@@ -2,7 +2,14 @@ import { asyncMiddleware } from '../middlewares'
 import { TOTP, User, UserMeasurement, UserWishlist } from '../models'
 import { StatusCodes } from 'http-status-codes'
 import dotenv from 'dotenv'
-import { comparePassword, generateOTToken, generatePassword, generateToken, verifyTOTPToken } from '../utils'
+import {
+  comparePassword,
+  generateOTToken,
+  generatePassword,
+  generateToken,
+  sendPushNotification,
+  verifyTOTPToken,
+} from '../utils'
 import speakeasy, { totp } from 'speakeasy'
 import { isEmpty } from 'lodash'
 import Email from '../utils/email'
@@ -104,6 +111,14 @@ export const CONTROLLER_AUTH = {
       }
       if (isVerification) {
         user.isVerified = true
+        sendPushNotification({
+          token: user.fcmToken,
+          userId: user._id,
+          notification: {
+            title: 'Welcome to FITTD!',
+            body: `Thanks for joining us! Start by adding your body measurements to get personalized recommendations just for you.`,
+          },
+        })
       }
       await user.save()
       return res.status(StatusCodes.OK).json({ message: 'OTP verified successfully.' })
@@ -162,7 +177,7 @@ export const CONTROLLER_AUTH = {
     })
   }),
   OAuth: asyncMiddleware(async (req, res) => {
-    const { auth_type, token_id, userID, access_token, fcmToken } = req.body
+    const { auth_type, token_id, fcmToken } = req.body
     console.log('BODY:', req.body)
     let userData
     switch (auth_type) {
@@ -183,7 +198,17 @@ export const CONTROLLER_AUTH = {
     console.log('userData', userData)
     const { email } = userData
     let userExists = await User.findOne({ email: email }).populate('measurements')
-    if (isEmpty(userExists)) userExists = await signupOAuthUser(userData, fcmToken)
+    if (isEmpty(userExists)) {
+      userExists = await signupOAuthUser(userData, fcmToken)
+      sendPushNotification({
+        token: fcmToken,
+        userId: userExists._id,
+        notification: {
+          title: 'Welcome to FITTD!',
+          body: `Thanks for joining us! Start by adding your body measurements to get personalized recommendations just for you.`,
+        },
+      })
+    }
     console.log('userExists', userExists)
     if (userExists) {
       if (userExists.accountType !== 'Google') {
@@ -199,7 +224,7 @@ export const CONTROLLER_AUTH = {
           }
         )
       }
-      // userExists.fcmToken = fcmToken
+      userExists.fcmToken = fcmToken
     }
     const response = await signinOAuthUser(userExists)
     console.log('response', response)
@@ -253,7 +278,7 @@ export const CONTROLLER_AUTH = {
     if (!user) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
     }
-
+    user.fcmToken = null
     res.status(StatusCodes.OK).json({ message: 'Logged out successfully' })
   }),
 
