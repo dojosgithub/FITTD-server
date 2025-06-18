@@ -21,7 +21,7 @@ dotenv.config()
 
 export const CONTROLLER_AUTH = {
   signup: asyncMiddleware(async (req, res) => {
-    const { name, email, password } = req.body
+    const { name, email, password, fcmToken } = req.body
 
     // Check if user already exists
     const existingUser = await User.findOne({ email })
@@ -39,7 +39,7 @@ export const CONTROLLER_AUTH = {
       // mobile,
       password: hashedPassword, // You should hash this before saving in production!
     })
-
+    user.fcmToken = fcmToken
     await user.save()
     const code = await generateOTP({ email })
     const sendEmail = await new Email({ email })
@@ -111,7 +111,7 @@ export const CONTROLLER_AUTH = {
       }
       if (isVerification) {
         user.isVerified = true
-        sendPushNotification({
+        await sendPushNotification({
           token: user.fcmToken,
           userId: user._id,
           notification: {
@@ -200,7 +200,7 @@ export const CONTROLLER_AUTH = {
     let userExists = await User.findOne({ email: email }).populate('measurements')
     if (isEmpty(userExists)) {
       userExists = await signupOAuthUser(userData, fcmToken)
-      sendPushNotification({
+      await sendPushNotification({
         token: fcmToken,
         userId: userExists._id,
         notification: {

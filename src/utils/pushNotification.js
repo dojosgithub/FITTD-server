@@ -35,11 +35,12 @@ export const sendPushNotification = async ({ token, userId, notification }) => {
     console.log('Notification sent:', response)
 
     // Save to DB
-    await new Notification({
+    const notificationSent = await new Notification({
       title: notification.title,
       message: notification.body,
       receivers: [{ userId }], // isUnRead defaults to true
     }).save()
+    console.log('Notification saved to DB:', notificationSent)
   } catch (error) {
     console.error('Error sending notification or saving to DB:', error)
   }

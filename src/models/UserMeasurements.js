@@ -11,7 +11,7 @@ export const measurementSchema = new Schema(
 
 const userMeasurementSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  gender: { type: String, enum: ['male', 'female', 'unisex'], required: true },
+  gender: { type: String, enum: ['male', 'female'], required: true },
   fit: { type: String, enum: ['tight', 'loose', 'fitted'], required: true },
 
   height: measurementSchema,

@@ -1,28 +1,64 @@
 import { User, UserMeasurement } from '../models'
 import { sendPushNotification } from '../utils'
 
-const isMeasurementComplete = (measurement) => {
-  if (!measurement) return false
-  if (typeof measurement !== 'object') return false
-  return measurement.value != null && measurement.unit != null
-}
+const isMeasurementComplete = (m) => !!m && typeof m === 'object' && m.value != null && m.unit != null
 
 export const isUserMeasurementComplete = (measurementDoc) => {
   if (!measurementDoc) return false
 
-  for (const [key, value] of Object.entries(measurementDoc.toObject())) {
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      const nested = value
-      for (const field of Object.values(nested)) {
-        if (!isMeasurementComplete(field)) return false
+  const doc = measurementDoc.toObject()
+  const gender = doc.gender
+
+  // Define required fields based on gender
+  const requiredFields = {
+    male: {
+      upperBody: ['chest', 'shoulderWidth', 'bicep', 'sleevesLength', 'torsoHeight'],
+      lowerBody: ['waist', 'hip', 'inseam', 'legLength', 'thighCircumference'],
+    },
+    female: {
+      upperBody: ['bust', 'bandSize', 'cupSize', 'sleevesLength', 'torsoHeight'],
+      lowerBody: ['waist', 'hip', 'inseam', 'legLength'],
+    },
+  }
+
+  const commonFields = {
+    height: true,
+    footMeasurement: ['footLength', 'footWidth'],
+    handMeasurement: ['handLength', 'handWidth'],
+    headMeasurement: ['headCircumference'],
+    faceMeasurement: ['faceLength', 'faceWidth'],
+  }
+
+  const genderFields = requiredFields[gender]
+  if (!genderFields) return false
+
+  // ✅ Check top-level height
+  if (commonFields.height && !isMeasurementComplete(doc.height)) {
+    return false
+  }
+
+  // ✅ Check gender-specific upperBody and lowerBody
+  for (const [section, keys] of Object.entries(genderFields)) {
+    for (const key of keys) {
+      if (!isMeasurementComplete(doc[section]?.[key])) {
+        return false
       }
-    } else if (!isMeasurementComplete(value)) {
-      return false
+    }
+  }
+
+  // ✅ Check common sections for all users
+  for (const [section, keys] of Object.entries(commonFields)) {
+    if (section === 'height') continue // already checked
+    for (const key of keys) {
+      if (!isMeasurementComplete(doc[section]?.[key])) {
+        return false
+      }
     }
   }
 
   return true
 }
+
 export const sendMeasurementUpdateReminders = async () => {
   const now = new Date()
   const oneMonthAgo = new Date(now)
@@ -42,7 +78,7 @@ export const sendMeasurementUpdateReminders = async () => {
     const measurement = await UserMeasurement.findOne({ userId: user._id })
 
     if (measurement) {
-      sendPushNotification({
+      await sendPushNotification({
         token: user.fcmToken,
         userId: user._id,
         notification: {
@@ -68,7 +104,7 @@ export const sendIncompleteMeasurementReminders = async () => {
     const measurement = await UserMeasurement.findOne({ userId: user._id })
 
     if (!measurement || !isUserMeasurementComplete(measurement)) {
-      sendPushNotification({
+      await sendPushNotification({
         token: user.fcmToken,
         userId: user._id,
         notification: {

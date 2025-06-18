@@ -34,7 +34,7 @@ export const CONTROLLER_MEASUREMENT = {
     if (wasIncomplete && isNowComplete) {
       const user = await User.findById(userId)
       if (user?.fcmToken) {
-        sendPushNotification({
+        await sendPushNotification({
           token: user.fcmToken,
           userId,
           notification: {
