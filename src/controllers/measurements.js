@@ -18,10 +18,10 @@ export const CONTROLLER_MEASUREMENT = {
       })
     }
 
-    const existing = await UserMeasurement.findOne({ userId })
+    const existingMeasurement = await UserMeasurement.findOne({ userId })
     const wasIncomplete = existingMeasurement ? !isUserMeasurementComplete(existingMeasurement) : true
     let result = null
-    if (existing) {
+    if (existingMeasurement) {
       result = await UserMeasurement.findOneAndUpdate({ userId }, { $set: data }, { new: true })
     } else {
       result = await new UserMeasurement({ userId, ...data }).save()
