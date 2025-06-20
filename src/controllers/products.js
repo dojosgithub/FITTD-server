@@ -388,8 +388,7 @@ export const CONTROLLER_PRODUCT = {
   }),
 
   getProductDetails: asyncMiddleware(async (req, res) => {
-    const { productId } = req.query
-    const userId = req.decoded._id
+    const { productId, userId } = req.query
 
     if (!productId || !userId) {
       return res.status(StatusCodes.BAD_REQUEST).json({ message: 'productId and userId are required.' })
