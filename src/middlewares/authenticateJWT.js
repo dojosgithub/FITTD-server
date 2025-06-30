@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 import { StatusCodes } from 'http-status-codes'
+import { User } from '../models'
 
 // const RefreshToken = require('../models/RefreshToken')
 // import _, { isEmpty } from 'lodash'
@@ -36,6 +37,12 @@ export const Authenticate =
       jwt.verify(token, process.env.JWT_SECRET_KEY, async (err, decoded) => {
         // console.log('decoded', decoded)
         if (decoded) {
+          const user = await User.findById(decoded._id)
+          if (!user) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+              message: 'User does not exist. Please login again.',
+            })
+          }
           req.decoded = decoded
           next()
         } else {
