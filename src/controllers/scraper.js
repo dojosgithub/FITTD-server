@@ -12,10 +12,12 @@ import {
 } from '../services'
 import { closeGlobalBrowser } from '../utils'
 
+const SCRAPING_STARTED_MSG = 'Scraping started. After few minutes run get all products api to see the results'
+
 export const CONTROLLER_SCRAPER = {
   getHouseOfCBProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeHouseOfCBProducts()
@@ -25,17 +27,17 @@ export const CONTROLLER_SCRAPER = {
   }),
   getEbDenimProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeEbDenimProducts()
     } finally {
-      await closeBrowser()
+      await closeGlobalBrowser()
     }
   }),
   getLuluLemonProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeLuluLemonProducts()
@@ -45,7 +47,7 @@ export const CONTROLLER_SCRAPER = {
   }),
   getAgoldeMenAndWomenProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeAgoldeMenAndWomenProducts()
@@ -55,7 +57,7 @@ export const CONTROLLER_SCRAPER = {
   }),
   getTheReformationProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeTheReformationProducts()
@@ -65,7 +67,7 @@ export const CONTROLLER_SCRAPER = {
   }),
   getSelfPotraitProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeSelfPotraitProducts()
@@ -75,7 +77,7 @@ export const CONTROLLER_SCRAPER = {
   }),
   getJCrewProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeJCrewProducts()
@@ -85,7 +87,7 @@ export const CONTROLLER_SCRAPER = {
   }),
   getSaboSkirtProducts: asyncMiddleware(async (req, res) => {
     res.status(StatusCodes.ACCEPTED).json({
-      message: 'Scraping started. Run Get All Products Api to see the results',
+      message: SCRAPING_STARTED_MSG,
     })
     try {
       await scrapeSaboSkirtProducts()
