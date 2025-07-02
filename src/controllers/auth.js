@@ -28,7 +28,7 @@ export const CONTROLLER_AUTH = {
     // const existingUser = await User.findOne({ $or: [{ email }, { mobile }] })
     if (existingUser) {
       return res.status(StatusCodes.CONFLICT).json({
-        message: 'User with this email or mobile number already exists.',
+        message: 'User with this email already exists.',
       })
     }
     const hashedPassword = await generatePassword(password)
@@ -67,7 +67,7 @@ export const CONTROLLER_AUTH = {
     const user = await User.findOne({ email })
     if (!user) {
       return res.status(StatusCodes.BAD_REQUEST).json({
-        message: 'No user found with the provided email or mobile number.',
+        message: 'No user found with the provided email.',
       })
     }
 
