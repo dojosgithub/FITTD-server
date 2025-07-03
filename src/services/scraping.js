@@ -39,7 +39,7 @@ export const scrapeEbDenim = async () => {
     const cat = categorizeProductByName(product.name, true)
     groupedByType[cat].push(product)
   }
-  return await updateOrCreateProductCollection('EB_Denim', groupedByType)
+  // return await updateOrCreateProductCollection('EB_Denim', groupedByType)
 }
 export const scrapeLuluLemon = async () => {
   const categories = [
@@ -58,7 +58,7 @@ export const scrapeLuluLemon = async () => {
   }
   return await updateOrCreateProductCollection('Lululemon', groupedByType)
 }
-export const scrapeAgoldeMenAndWomenProducts = async () => {
+export const scrapeAgolde = async () => {
   const menUrl = 'https://agolde.com/collections/shop-all-mens/products.json'
   const womenUrl = 'https://agolde.com/collections/shop-all-womens/products.json'
 
@@ -82,7 +82,7 @@ export const scrapeAgoldeMenAndWomenProducts = async () => {
   }
   return await updateOrCreateProductCollection('Agolde', groupedByType)
 }
-export const scrapeTheReformationProducts = async () => {
+export const scrapeTheReformation = async () => {
   const categories = [
     { type: 'clothes', url: 'https://www.thereformation.com/clothing?page=125' },
     { type: 'wedding', url: 'https://www.thereformation.com/bridal?page=28' },
@@ -103,7 +103,7 @@ export const scrapeTheReformationProducts = async () => {
   }
   return await updateOrCreateProductCollection('Reformation', groupedByType)
 }
-export const scrapeSelfPotraitProducts = async () => {
+export const scrapeSelfPotrait = async () => {
   const categoryUrl = 'https://us.self-portrait.com/collections/all' // Example category URL
 
   const products = await getSelfPotraitProductUrlsFromCategory(categoryUrl)
@@ -113,7 +113,7 @@ export const scrapeSelfPotraitProducts = async () => {
   }
   return await updateOrCreateProductCollection('Self_Potrait', groupedByType)
 }
-export const scrapeJCrewProducts = async () => {
+export const scrapeJCrew = async () => {
   const categories = [
     { type: 'men', url: 'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=9' },
     { type: 'women', url: 'https://www.jcrew.com/plp/womens?Npge=1&Nrpp=9' },
@@ -130,7 +130,7 @@ export const scrapeJCrewProducts = async () => {
   }
   return await updateOrCreateProductCollection('J_Crew', groupedByType)
 }
-export const scrapeSaboSkirtProducts = async () => {
+export const scrapeSaboSkirt = async () => {
   const categoryUrl = 'https://us.saboskirt.com/collections/active-products'
 
   const products = await getProductUrlsFromCategory(categoryUrl)
