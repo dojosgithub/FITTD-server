@@ -39,7 +39,7 @@ export const scrapeEbDenim = async () => {
     const cat = categorizeProductByName(product.name, true)
     groupedByType[cat].push(product)
   }
-  // return await updateOrCreateProductCollection('EB_Denim', groupedByType)
+  return await updateOrCreateProductCollection('EB_Denim', groupedByType)
 }
 export const scrapeLuluLemon = async () => {
   const categories = [
