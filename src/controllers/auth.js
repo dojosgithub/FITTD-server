@@ -13,7 +13,6 @@ import {
 import speakeasy, { totp } from 'speakeasy'
 import { isEmpty } from 'lodash'
 import Email from '../utils/email'
-import { sendSMS } from '../utils/smsUtil'
 import { generateOTP } from '../utils/generateOtp'
 import { authenticateGoogleUser, signinOAuthUser, signupOAuthUser } from '../services'
 
@@ -45,8 +44,6 @@ export const CONTROLLER_AUTH = {
     const sendEmail = await new Email({ email })
     const emailProps = { code, name: user.name }
     await sendEmail.registerAccount(emailProps)
-
-    // await sendSMS(`Your time based one time login code is: ${code}`, mobile) // UTL
 
     const userObj = user.toObject()
     delete userObj.password
