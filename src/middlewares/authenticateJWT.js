@@ -46,7 +46,9 @@ export const Authenticate =
           req.decoded = decoded
           next()
         } else {
-          res.status(StatusCodes.UNAUTHORIZED).send(new Error('Token is not valid, please login again'))
+          res.status(StatusCodes.UNAUTHORIZED).json({
+            message: 'Token is not valid, please login again',
+          })
         }
       })
     } else {
