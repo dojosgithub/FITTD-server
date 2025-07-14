@@ -20,8 +20,8 @@ dotenv.config()
 
 export const CONTROLLER_AUTH = {
   signup: asyncMiddleware(async (req, res) => {
-    const { name, email, password, fcmToken } = req.body
-
+    let { name, email, password, fcmToken } = req.body
+    email = email.toLowerCase()
     // Check if user already exists
     const existingUser = await User.findOne({ email })
     // const existingUser = await User.findOne({ $or: [{ email }, { mobile }] })
@@ -125,12 +125,9 @@ export const CONTROLLER_AUTH = {
   }),
 
   signIn: asyncMiddleware(async (req, res) => {
-    const { email, password, fcmToken } = req.body
+    let { email, password, fcmToken } = req.body
+    email = email.toLowerCase()
 
-    // Search by email or mobile
-    // const user = await User.findOne({
-    //   $or: [{ email }, { mobile }],
-    // }).select('+password')
     const user = await User.findOne({ email }).select('+password').populate('measurements')
 
     if (!user) {
