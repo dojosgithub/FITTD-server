@@ -53,7 +53,6 @@ export const scrapeEbDenim = async () => {
       else if (category.type === 'tops') cat = 'tops'
       else if (category.type === 'bottoms') cat = 'bottoms'
       else if (category.type === 'dresses') cat = 'dresses'
-      // else cat = categorizeProductByName(product.name)
       groupedByType[cat].push(product)
     }
   }
