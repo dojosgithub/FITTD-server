@@ -29,12 +29,12 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
 
   // Outerwear category
-  if (/(cardigan|coat|jacket|blazer|hoodie|popover|zip|vest|parka|anorak|windbreaker)/.test(lower)) {
+  if (/(cardigan|coat|jacket|blazer|hoodie|popover|vest|parka|anorak|windbreaker)/.test(lower)) {
     return 'outerwear'
   }
   // Footwear category
   if (
-    /\b(heel|heels|boot|boots|shoe|shoes|sock|socks|footwear|sandal|sandals|loafer|loafers|mule|mules|sneaker|sneakers|platform|platforms|wedge|wedges|slipper|slippers|flat|flats|flop|flops|jogger|joggers|slide|slides)\b/.test(
+    /\b(heel|heels|boot|boots|shoe|shoes|sock|socks|footwear|sandal|sandals|loafer|loafers|mule|mules|sneaker|sneakers|platform|platforms|wedge|wedges|slipper|slippers|flat|flats|flop|flops|jogger|joggers|slide|slides|trainers)\b/.test(
       lower
     )
   ) {
@@ -42,7 +42,7 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
   // Accessories category
   if (
-    /\b(bag|belt|accessory|cap|veil|earring|necklace|scarf|hat|bracelet|glove|ring|headband|sunglasses|clutch|watch|wallet|keychain|beaded|brooch|headband|belted|jewelry|chain|handbag|purse|glasses|glove|gloves)\b/.test(
+    /\b(bag|belt|accessory|backpack|cap|veil|earring|necklace|scarf|hat|bracelet|glove|ring|headband|sunglasses|clutch|watch|wallet|keychain|beaded|brooch|headband|belted|jewelry|chain|handbag|purse|glasses|glove|gloves|sheet)\b/.test(
       lower
     )
   ) {
@@ -50,7 +50,7 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
   // Tops category
   if (
-    /\b(top|cape|workshirt|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse|jumper)\b/.test(
+    /\b(top|cape|workshirt|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse|jumper|tunic)\b/.test(
       lower
     )
   ) {

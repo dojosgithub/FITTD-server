@@ -2,7 +2,7 @@ import { normalizeHtml } from '../../utils'
 import { scrapeProductsInParallel, setupPage } from './commonScraper.js'
 
 export const getEbDenimProductUrlsFromCategory = async (categoryUrl, existingPage = null) => {
-  const selector = '.product-info .product-link'
+  const selector = 'main#content .product-info .product-link'
   const page = await setupPage(categoryUrl, selector, existingPage)
 
   if (!page) {
@@ -79,7 +79,7 @@ export const extractEbDenimProductsFromPage = async (page, baseUrl) => {
   return await page.evaluate((baseUrl) => {
     const products = []
 
-    document.querySelectorAll('.block-inner-inner').forEach((block) => {
+    document.querySelectorAll('main#content .block-inner-inner').forEach((block) => {
       const productInfoLink = block.querySelector('.product-info .product-link')
 
       if (productInfoLink) {
