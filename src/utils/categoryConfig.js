@@ -29,7 +29,7 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
 
   // Outerwear category
-  if (/(cardigan|coat|jacket|blazer|jacket|hoodie|popover|zip|vest|parka|anorak|windbreaker)/.test(lower)) {
+  if (/(cardigan|coat|jacket|blazer|hoodie|popover|zip|vest|parka|anorak|windbreaker)/.test(lower)) {
     return 'outerwear'
   }
   // Footwear category
@@ -42,7 +42,7 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
   // Accessories category
   if (
-    /(bag|belt|accessory|cap|veil|earring|necklace|scarf|hat|bracelet|glove|ring|headband|sunglasses|clutch|watch|wallet|keychain|beaded|brooch|headband|belted|jewelry|chain|handbag|purse|glasses|glove|hair)/.test(
+    /\b(bag|belt|accessory|cap|veil|earring|necklace|scarf|hat|bracelet|glove|ring|headband|sunglasses|clutch|watch|wallet|keychain|beaded|brooch|headband|belted|jewelry|chain|handbag|purse|glasses|glove|gloves)\b/.test(
       lower
     )
   ) {
@@ -50,7 +50,7 @@ export const categorizeProductByName = (name, ebDenim) => {
   }
   // Tops category
   if (
-    /\b(top|workshirt|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse)\b/.test(
+    /\b(top|cape|workshirt|bustier|camisole|sweater|cover up|tank|t-shirt|shirt|bra|swimsuit|underwired|sweatshirt|bandeau|veil|tee|crewneck|henley|baselayer|mockneck|crew|pullover|long sleeve|blouse|jumper)\b/.test(
       lower
     )
   ) {
@@ -59,7 +59,7 @@ export const categorizeProductByName = (name, ebDenim) => {
 
   // Bottoms category
   const standardBottomsRegex =
-    /(skirt|bottom|trouser|short|capri|pant|legging|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/
+    /(skirt|skort|bottom|trouser|short|capri|pant|legging|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/
   const ebDenimExtras = /(loose bowed|extra baggy|barrel|double knee|slim cigarette)/
 
   if (standardBottomsRegex.test(lower) || (ebDenim && ebDenimExtras.test(lower))) {
