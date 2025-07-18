@@ -20,7 +20,7 @@ export const categorizeProductByName = (name, ebDenim) => {
     return 'tops'
   }
 
-  if (/denim/.test(lower)) {
+  if (/denim|jean|jeans/.test(lower)) {
     return 'denim'
   }
   // Dresses category
@@ -59,7 +59,7 @@ export const categorizeProductByName = (name, ebDenim) => {
 
   // Bottoms category
   const standardBottomsRegex =
-    /(skirt|bottom|trouser|short|capri|pant|legging|jean|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/
+    /(skirt|bottom|trouser|short|capri|pant|legging|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/
   const ebDenimExtras = /(loose bowed|extra baggy|barrel|double knee|slim cigarette)/
 
   if (standardBottomsRegex.test(lower) || (ebDenim && ebDenimExtras.test(lower))) {
@@ -81,7 +81,7 @@ export const determineSubCategory = (category, productName) => {
           lower
         )
       ? 'tops'
-      : /(skirt|bottom|trouser|short|capri|pant|legging|jean|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/.test(
+      : /(skirt|bottom|trouser|short|capri|pant|legging|jean|jeans|thong|brief|chino|cargo|rise|leg|fray|slung|waist|boxer|tight)/.test(
           lower
         )
       ? 'bottoms'

@@ -32,13 +32,32 @@ export const scrapeHouseOfCB = async () => {
 }
 
 export const scrapeEbDenim = async () => {
-  const categoryUrl = 'https://www.ebdenim.com/collections/all-products' // Example category URL
+  // const categoryUrl = 'https://www.ebdenim.com/collections/all-products' // Example category URL
+  const categories = [
+    { type: 'denim', url: 'https://www.ebdenim.com/collections/pants' },
+    { type: 'tops', url: 'https://www.ebdenim.com/collections/tops' },
+    { type: 'bottoms', url: 'https://www.ebdenim.com/collections/shorts-and-skirts' },
+    { type: 'dresses', url: 'https://www.ebdenim.com/collections/dresses' },
+  ]
 
-  const products = await getEbDenimProductUrlsFromCategory(categoryUrl)
-  for (const product of products) {
-    const cat = categorizeProductByName(product.name, true)
-    groupedByType[cat].push(product)
+  // const products = await getEbDenimProductUrlsFromCategory(categoryUrl)
+  // for (const product of products) {
+  //   const cat = categorizeProductByName(product.name, true)
+  //   groupedByType[cat].push(product)
+  // }
+  for (const category of categories) {
+    const products = await getEbDenimProductUrlsFromCategory(category.url)
+    for (const product of products) {
+      let cat
+      if (category.type === 'denim') cat = 'denim'
+      else if (category.type === 'tops') cat = 'tops'
+      else if (category.type === 'bottoms') cat = 'bottoms'
+      else if (category.type === 'dresses') cat = 'dresses'
+      // else cat = categorizeProductByName(product.name)
+      groupedByType[cat].push(product)
+    }
   }
+  // console.log('ebdenim', groupedByType)
   return await updateOrCreateProductCollection('EB_Denim', groupedByType)
 }
 export const scrapeLuluLemon = async () => {

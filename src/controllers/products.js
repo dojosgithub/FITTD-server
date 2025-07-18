@@ -581,4 +581,24 @@ export const CONTROLLER_PRODUCT = {
       suggestions,
     })
   }),
+  migrateJeansToDenim: asyncMiddleware(async (req, res) => {
+    const result = await Product.updateMany(
+      {
+        category: 'bottoms',
+        name: { $regex: '\\bjeans?\\b', $options: 'i' },
+      },
+      {
+        $set: {
+          category: 'denim',
+          previousCategory: 'bottoms',
+        },
+      }
+    )
+
+    res.status(200).json({
+      message: 'Migration completed successfully.',
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+    })
+  }),
 }
