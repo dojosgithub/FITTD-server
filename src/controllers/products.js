@@ -396,7 +396,7 @@ export const CONTROLLER_PRODUCT = {
 
     // Fetch product by ID
     const [product, wishlistSet, user] = await Promise.all([
-      Product.findById(productId).lean(),
+      Product.findById({ _id: productId }).lean(),
       getWishlistProductIdSet(userId),
       UserMeasurement.findOne({ userId }).lean(),
     ])
@@ -421,7 +421,7 @@ export const CONTROLLER_PRODUCT = {
     const fitType = user.fit
 
     // Determine sub-category if applicable
-    const subCategory = category === 'denim' ? determineSubCategory(category, name) : category
+    const subCategory = category === 'denim' ? await determineSubCategory(category, name) : category
 
     const isTopsCategory = ['tops', 'outerwear', 'dresses'].includes(subCategory)
     let categoryKey = isTopsCategory ? 'tops' : 'bottoms'
@@ -441,12 +441,12 @@ export const CONTROLLER_PRODUCT = {
       sizeChartDoc?.sizeChart?.[unit]?.[gender]?.[categoryKey] ||
       sizeChartDoc?.sizeChart?.[unit]?.[gender]?.default ||
       sizeChartDoc?.sizeChart?.[unit]?.default
-    console.log('sizeChart', sizeChart, unit, gender, categoryKey)
     if (!sizeChart) {
       return res.status(404).json({
         message: `No size chart found for brand ${brand} and unit ${unit}.`,
       })
     }
+    console.log('sizeChart', sizeChart)
     const measurementType = isTopsCategory ? 'bust' : 'waist'
     // Use the enhanced bust-based size matching for tops
     let bestFit

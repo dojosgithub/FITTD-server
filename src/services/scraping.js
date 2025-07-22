@@ -1,7 +1,9 @@
 // services/scraping/houseofcb.service.js
 import {
-  categorizeProductByName,
+  categorizeProductBatch,
+  createGroupedByType,
   getAllProducts,
+  getCategoriesName,
   getEbDenimProductUrlsFromCategory,
   getHouseOfCbProductUrlsFromCategory,
   getJCrewProductUrlsFromCategory,
@@ -10,11 +12,14 @@ import {
   getSelfPotraitProductUrlsFromCategory,
   getTheReformationProductUrlsFromCategory,
   groupedByType,
+  manualCategorizeProductByName,
   transformProducts,
 } from '../utils'
 import { updateOrCreateProductCollection } from './user.js'
 
 export const scrapeHouseOfCB = async () => {
+  const groupedByType = createGroupedByType()
+
   const categories = [
     { type: 'accessories', url: 'https://app.houseofcb.com/category?category_id=11' },
     { type: 'clothing', url: 'https://app.houseofcb.com/category?category_id=2' },
@@ -24,7 +29,7 @@ export const scrapeHouseOfCB = async () => {
     const products = await getHouseOfCbProductUrlsFromCategory(category.url)
 
     for (const product of products) {
-      let cat = category.type === 'accessories' ? 'accessories' : categorizeProductByName(product.name)
+      let cat = category.type === 'accessories' ? 'accessories' : manualCategorizeProductByName(product.name)
       groupedByType[cat].push(product)
     }
   }
@@ -32,6 +37,7 @@ export const scrapeHouseOfCB = async () => {
 }
 
 export const scrapeEbDenim = async () => {
+  const groupedByType = createGroupedByType()
   // const categoryUrl = 'https://www.ebdenim.com/collections/all-products' // Example category URL
   const categories = [
     { type: 'denim', url: 'https://www.ebdenim.com/collections/pants' },
@@ -59,24 +65,58 @@ export const scrapeEbDenim = async () => {
   // console.log('ebdenim', groupedByType)
   return await updateOrCreateProductCollection('EB_Denim', groupedByType)
 }
+// export const scrapeLuluLemon = async () => {
+//   const categories = [
+//     { type: 'men', url: 'https://shop.lululemon.com/c/men-bestsellers/n1nrqwznskl' },
+//     { type: 'women', url: 'https://shop.lululemon.com/c/women-bestsellers/n16o10znskl' },
+//   ]
+
+//   for (const category of categories) {
+//     const products = await getLuluLemonProductUrlsFromCategory(category.url)
+//     const gender = category.type === 'men' ? 'male' : 'female'
+//     for (const product of products) {
+//       const productWithGender = { ...product, gender }
+//       // const cat = await categorizeProductByName(productWithGender.name)
+//       const cat = manualCategorizeProductByName(productWithGender.name)
+//       groupedByType[cat].push(productWithGender)
+//     }
+//   }
+//   return await updateOrCreateProductCollection('Lululemon', groupedByType)
+// }
 export const scrapeLuluLemon = async () => {
+  const groupedByType = createGroupedByType()
   const categories = [
     { type: 'men', url: 'https://shop.lululemon.com/c/men-bestsellers/n1nrqwznskl' },
     { type: 'women', url: 'https://shop.lululemon.com/c/women-bestsellers/n16o10znskl' },
   ]
 
+  const allowedCategories = getCategoriesName() // ['outerwear', 'denim', ...]
+  const batchSize = 300
+
   for (const category of categories) {
     const products = await getLuluLemonProductUrlsFromCategory(category.url)
     const gender = category.type === 'men' ? 'male' : 'female'
-    for (const product of products) {
-      const productWithGender = { ...product, gender }
-      const cat = categorizeProductByName(productWithGender.name)
-      groupedByType[cat].push(productWithGender)
+
+    for (let i = 0; i < products.length; i += batchSize) {
+      const batch = products.slice(i, i + batchSize).map((p) => ({ ...p, gender }))
+      const productNames = batch.map((p) => p.name)
+
+      const catResults = await categorizeProductBatch(productNames)
+
+      Object.entries(catResults).forEach(([index, cat]) => {
+        const safeCat = allowedCategories.includes(cat) ? cat : 'accessories'
+        if (!groupedByType[safeCat]) groupedByType[safeCat] = []
+        groupedByType[safeCat].push(batch[parseInt(index, 10) - 1])
+      })
     }
   }
+
   return await updateOrCreateProductCollection('Lululemon', groupedByType)
 }
+
 export const scrapeAgolde = async () => {
+  const groupedByType = createGroupedByType()
+
   const menUrl = 'https://agolde.com/collections/shop-all-mens/products.json'
   const womenUrl = 'https://agolde.com/collections/shop-all-womens/products.json'
 
@@ -95,12 +135,14 @@ export const scrapeAgolde = async () => {
   const allProducts = [...menProducts, ...womenProducts]
 
   for (const product of allProducts) {
-    const cat = categorizeProductByName(product.name)
+    const cat = await manualCategorizeProductByName(product.name)
     groupedByType[cat].push(product)
   }
   return await updateOrCreateProductCollection('Agolde', groupedByType)
 }
 export const scrapeTheReformation = async () => {
+  const groupedByType = createGroupedByType()
+
   const categories = [
     { type: 'clothes', url: 'https://www.thereformation.com/clothing?page=125' },
     { type: 'wedding', url: 'https://www.thereformation.com/bridal?page=28' },
@@ -115,23 +157,44 @@ export const scrapeTheReformation = async () => {
       if (category.type === 'shoes') cat = 'footwear'
       else if (category.type === 'bags') cat = 'accessories'
       else if (category.type === 'wedding') cat = 'dresses'
-      else cat = categorizeProductByName(product.name)
+      else cat = manualCategorizeProductByName(product.name)
       groupedByType[cat].push(product)
     }
   }
   return await updateOrCreateProductCollection('Reformation', groupedByType)
 }
 export const scrapeSelfPotrait = async () => {
+  const groupedByType = createGroupedByType()
+
   const categoryUrl = 'https://us.self-portrait.com/collections/all' // Example category URL
 
   const products = await getSelfPotraitProductUrlsFromCategory(categoryUrl)
-  for (const product of products) {
-    const cat = categorizeProductByName(product.name)
-    groupedByType[cat].push(product)
+  const allowedCategories = getCategoriesName()
+
+  const batchSize = 300
+
+  for (let i = 0; i < products.length; i += batchSize) {
+    const batch = products.slice(i, i + batchSize)
+    const productNames = batch.map((p) => p.name)
+    const catResults = await categorizeProductBatch(productNames)
+
+    Object.entries(catResults).forEach(([key, cat]) => {
+      const idx = parseInt(key, 10) - 1
+      const safeCat = allowedCategories.includes(cat) ? cat : 'accessories'
+      if (!groupedByType[safeCat]) groupedByType[safeCat] = []
+      groupedByType[safeCat].push(batch[idx])
+    })
   }
+  // for (const product of products) {
+  //   const cat = await categorizeProductByName(product.name)
+  //   const safeCat = allowedCategories.includes(cat) ? cat : 'accessories' // or 'misc'
+  //   groupedByType[safeCat].push(product)
+  // }
   return await updateOrCreateProductCollection('Self_Potrait', groupedByType)
 }
 export const scrapeJCrew = async () => {
+  const groupedByType = createGroupedByType()
+
   const categories = [
     { type: 'men', url: 'https://www.jcrew.com/plp/mens?Npge=1&Nrpp=9' },
     { type: 'women', url: 'https://www.jcrew.com/plp/womens?Npge=1&Nrpp=9' },
@@ -142,18 +205,20 @@ export const scrapeJCrew = async () => {
     const gender = category.type === 'men' ? 'male' : 'female'
     for (const product of products) {
       const productWithGender = { ...product, gender }
-      const cat = categorizeProductByName(productWithGender.name)
+      const cat = manualCategorizeProductByName(productWithGender.name)
       groupedByType[cat].push(productWithGender)
     }
   }
   return await updateOrCreateProductCollection('J_Crew', groupedByType)
 }
 export const scrapeSaboSkirt = async () => {
+  const groupedByType = createGroupedByType()
+
   const categoryUrl = 'https://us.saboskirt.com/collections/active-products'
 
   const products = await getProductUrlsFromCategory(categoryUrl)
   for (const product of products) {
-    const cat = categorizeProductByName(product.name)
+    const cat = manualCategorizeProductByName(product.name)
     groupedByType[cat].push(product)
   }
   return await updateOrCreateProductCollection('Sabo_Skirt', groupedByType)

@@ -157,7 +157,7 @@ const createProductResult = (product, alterationRequired, wishlistSet) => {
 }
 
 // Main function to process a single product
-export const processProduct = (
+export const processProduct = async (
   product,
   category,
   sizeChartMap,
@@ -183,7 +183,6 @@ export const processProduct = (
 
   const categoryKey = getCategoryKey(subCategory, brand, gender, category)
   const isJCrew = brand === 'J_Crew'
-
   const sizeChart = getBrandSizeChart(sizeChartMap, brand, gender, categoryKey, unit)
   if (!sizeChart) {
     return null // Skip this product
@@ -200,6 +199,7 @@ export const processProduct = (
     userSleeves,
     fitType
   )
+
   const filteredSizes = matchingSizes.filter((s) => s.fitType === fitType)
 
   const sizeSet = new Set(
